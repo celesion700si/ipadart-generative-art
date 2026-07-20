@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>24 Breaths of ADE Taiwan</title>
+<style>
+  html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#120b0c;
+  }
+  body{touch-action:none}
+  canvas{
+    display:block;
+    width:100vw;
+    height:100vh;
+    background:#120b0c;
+  }
+  .label{
+    position:fixed;
+    left:max(18px,env(safe-area-inset-left));
+    top:max(18px,env(safe-area-inset-top));
+    color:rgba(255,255,255,.72);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .label h1{
+    margin:0;
+    font-size:clamp(15px,1.6vw,22px);
+    font-weight:500;
+    letter-spacing:.08em;
+  }
+  .label p{
+    margin:6px 0 0;
+    font-size:11px;
+    letter-spacing:.16em;
+    color:rgba(255,255,255,.38);
+  }
+  .hint{
+    position:fixed;
+    left:50%;
+    bottom:max(18px,env(safe-area-inset-bottom));
+    transform:translateX(-50%);
+    color:rgba(255,255,255,.28);
+    font:11px/1.3 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;
+    letter-spacing:.14em;
+    pointer-events:none;
+    animation:fade 9s ease forwards;
+    white-space:nowrap;
+  }
+  @keyframes fade{
+    0%{opacity:0}
+    15%{opacity:1}
+    80%{opacity:1}
+    100%{opacity:0}
+  }
+</style>
+</head>
+<body>
+<canvas id="art"></canvas>
+
+<div class="label">
+  <h1>24 Breaths of ADE Taiwan</h1>
+  <p>TAIWAN ADE LIVING CONSTELLATION</p>
+</div>
+
+<div class="hint">移動或觸碰，讓 24 個呼吸彼此共振</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("art");
+  const ctx = canvas.getContext("2d", { alpha:false });
+
+  const CONFIG = {
+    nodeCount: 24,
+    background: "#120b0c",
+    trailAlpha: 0.12,
+    nodeScale: 1,
+    ringCount: 11,
+    ringSpacing: 4.2,
+    connectionDistance: 190,
+    resonanceThreshold: 0.13,
+    lineAlpha: 0.18,
+    particleCount: 260,
+    particleSpeed: 0.42,
+    pointerRadius: 180,
+    dprMax: 2
+  };
+
+  let W=1,H=1,DPR=1;
+  let nodes=[];
+  let motes=[];
+  let time=0;
+  let last=performance.now();
+  let pointer={x:0,y:0,active:false,strength:0};
+
+  // 24 個 ADE 節點，以相對座標排列成台灣輪廓
+  // 座標為 0~1，能隨螢幕比例重新配置
+  const TAIWAN_POINTS = [
+    [0.56,0.06],[0.51,0.11],[0.58,0.12],[0.64,0.13],
+    [0.46,0.17],[0.61,0.21],[0.42,0.25],[0.50,0.23],
+    [0.38,0.31],[0.55,0.30],[0.44,0.36],[0.34,0.42],
+    [0.50,0.42],[0.60,0.39],[0.40,0.49],[0.29,0.52],
+    [0.50,0.53],[0.34,0.61],[0.44,0.66],[0.36,0.72],
+    [0.47,0.78],[0.43,0.86],[0.48,0.92],[0.52,0.98]
+  ];
+
+  const PALETTE = [
+    [243,166,24],
+    [232,109,26],
+    [238,85,105],
+    [197,0,188],
+    [158,0,210]
+  ];
+
+  class Node {
+    constructor(index, uv) {
+      this.index=index;
+      this.u=uv[0];
+      this.v=uv[1];
+      this.phase=Math.random()*Math.PI*2;
+      this.pulseSpeed=0.45+Math.random()*0.55;
+      this.influence=0.75+Math.random()*0.65;
+      this.baseRadius=8+Math.random()*9;
+      this.colorOffset=index/(CONFIG.nodeCount-1);
+      this.x=0;
+      this.y=0;
+      this.dx=0;
+      this.dy=0;
+      this.energy=0;
+    }
+
+    update(t){
+      const bounds=getIslandBounds();
+      const driftX=Math.sin(t*0.00034*this.pulseSpeed+this.phase)*5.2;
+      const driftY=Math.cos(t*0.00029*this.pulseSpeed+this.phase*1.3)*5.2;
+
+      const targetX=bounds.x + this.u*bounds.w;
+      const targetY=bounds.y + this.v*bounds.h;
+
+      this.dx += ((targetX+driftX)-this.x)*0.018;
+      this.dy += ((targetY+driftY)-this.y)*0.018;
+      this.dx *= 0.88;
+      this.dy *= 0.88;
+
+      if(pointer.active){
+        const px=this.x-pointer.x;
+        const py=this.y-pointer.y;
+        const d=Math.hypot(px,py)+0.001;
+        if(d<CONFIG.pointerRadius){
+          const q=(1-d/CONFIG.pointerRadius)*pointer.strength;
+          this.dx += (px/d)*q*0.95;
+          this.dy += (py/d)*q*0.95;
+          this.energy=Math.min(1,this.energy+q*0.08);
+        }
+      }
+
+      this.x+=this.dx;
+      this.y+=this.dy;
+      this.energy*=0.965;
+    }
+
+    pulse(t){
+      return 0.5+0.5*Math.sin(t*0.0012*this.pulseSpeed+this.phase);
+    }
+
+    color(){
+      const s=this.colorOffset*(PALETTE.length-1);
+      const i=Math.floor(s);
+      const j=Math.min(i+1,PALETTE.length-1);
+      const f=s-i;
+      return [
+        PALETTE[i][0]*(1-f)+PALETTE[j][0]*f,
+        PALETTE[i][1]*(1-f)+PALETTE[j][1]*f,
+        PALETTE[i][2]*(1-f)+PALETTE[j][2]*f
+      ];
+    }
+
+    draw(t){
+      const p=this.pulse(t);
+      const c=this.color();
+      const r=(this.baseRadius*(0.86+p*0.32)+this.energy*5)*CONFIG.nodeScale;
+
+      ctx.globalCompositeOperation="lighter";
+
+      // 影響力波紋
+      for(let i=0;i<CONFIG.ringCount;i++){
+        const rr=r+10+i*CONFIG.ringSpacing+(p*4);
+        const a=0.065*(1-i/CONFIG.ringCount)*(0.7+p*0.5);
+        ctx.strokeStyle=`rgba(235,177,48,${a})`;
+        ctx.lineWidth=0.75;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,rr,0,Math.PI*2);
+        ctx.stroke();
+      }
+
+      // 光暈
+      const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,r*3.1);
+      g.addColorStop(0,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},0.40)`);
+      g.addColorStop(0.45,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},0.12)`);
+      g.addColorStop(1,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},0)`);
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,r*3.1,0,Math.PI*2);
+      ctx.fill();
+
+      // 節點本體
+      ctx.fillStyle=`rgba(${c[0]|0},${c[1]|0},${c[2]|0},0.95)`;
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,r,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.globalCompositeOperation="source-over";
+    }
+  }
+
+  class Mote{
+    constructor(){this.reset();}
+    reset(){
+      this.x=Math.random()*W;
+      this.y=Math.random()*H;
+      this.vx=0;
+      this.vy=0;
+      this.life=Math.random()*600;
+      this.maxLife=500+Math.random()*900;
+    }
+    update(dt){
+      let fx=0,fy=0,weight=0;
+
+      for(const n of nodes){
+        const dx=n.x-this.x;
+        const dy=n.y-this.y;
+        const d2=dx*dx+dy*dy+200;
+        const d=Math.sqrt(d2);
+        const inf=n.influence/(1+d2*0.00025);
+        weight+=inf;
+        fx+=(dx/d)*inf*0.18;
+        fy+=(dy/d)*inf*0.18;
+
+        const spin=((n.index%2===0)?1:-1);
+        fx+=(-dy/d)*inf*0.12*spin;
+        fy+=( dx/d)*inf*0.12*spin;
+      }
+
+      const a=Math.sin(this.x*0.006+time*0.00037)+Math.cos(this.y*0.005-time*0.00029);
+      fx+=Math.cos(a)*0.035;
+      fy+=Math.sin(a)*0.035;
+
+      if(pointer.active){
+        const dx=this.x-pointer.x;
+        const dy=this.y-pointer.y;
+        const d=Math.hypot(dx,dy)+0.001;
+        if(d<CONFIG.pointerRadius){
+          const q=(1-d/CONFIG.pointerRadius)*pointer.strength;
+          fx+=(dx/d)*q*0.5;
+          fy+=(dy/d)*q*0.5;
+        }
+      }
+
+      this.vx=(this.vx+fx*0.012*dt)*0.986;
+      this.vy=(this.vy+fy*0.012*dt)*0.986;
+
+      const m=Math.hypot(this.vx,this.vy);
+      if(m>1.4){
+        this.vx=this.vx/m*1.4;
+        this.vy=this.vy/m*1.4;
+      }
+
+      this.x+=this.vx*CONFIG.particleSpeed*dt;
+      this.y+=this.vy*CONFIG.particleSpeed*dt;
+      this.life+=dt;
+
+      if(this.life>this.maxLife || this.x<-50 || this.x>W+50 || this.y<-50 || this.y>H+50){
+        const n=nodes[(Math.random()*nodes.length)|0];
+        this.x=n.x+(Math.random()-.5)*80;
+        this.y=n.y+(Math.random()-.5)*80;
+        this.vx=(Math.random()-.5)*0.3;
+        this.vy=(Math.random()-.5)*0.3;
+        this.life=0;
+      }
+    }
+
+    draw(){
+      ctx.fillStyle="rgba(255,245,225,0.38)";
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,0.7,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function getIslandBounds(){
+    const portrait=H>=W;
+    if(portrait){
+      const h=H*0.78;
+      const w=Math.min(W*0.78,h*0.48);
+      return {
+        x:(W-w)/2,
+        y:(H-h)/2,
+        w,h
+      };
+    }else{
+      const h=H*0.84;
+      const w=h*0.48;
+      return {
+        x:(W-w)/2,
+        y:(H-h)/2,
+        w,h
+      };
+    }
+  }
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,CONFIG.dprMax);
+    W=Math.max(1,window.innerWidth);
+    H=Math.max(1,window.innerHeight);
+
+    canvas.width=Math.floor(W*DPR);
+    canvas.height=Math.floor(H*DPR);
+    canvas.style.width=W+"px";
+    canvas.style.height=H+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    ctx.fillStyle=CONFIG.background;
+    ctx.fillRect(0,0,W,H);
+
+    if(nodes.length===0){
+      nodes=TAIWAN_POINTS.map((uv,i)=>new Node(i,uv));
+    }
+
+    const b=getIslandBounds();
+    nodes.forEach(n=>{
+      n.x=b.x+n.u*b.w;
+      n.y=b.y+n.v*b.h;
+    });
+  }
+
+  function drawConnections(){
+    ctx.globalCompositeOperation="lighter";
+
+    for(let i=0;i<nodes.length;i++){
+      const a=nodes[i];
+      for(let j=i+1;j<nodes.length;j++){
+        const b=nodes[j];
+        const dx=b.x-a.x;
+        const dy=b.y-a.y;
+        const d=Math.hypot(dx,dy);
+        if(d>CONFIG.connectionDistance) continue;
+
+        const pa=a.pulse(time);
+        const pb=b.pulse(time);
+        const resonance=1-Math.abs(pa-pb);
+
+        if(resonance>1-CONFIG.resonanceThreshold){
+          const alpha=(1-d/CONFIG.connectionDistance)*CONFIG.lineAlpha*resonance;
+          const bend=Math.sin(time*0.0007+(i+j))*18;
+
+          const mx=(a.x+b.x)/2-dy/d*bend;
+          const my=(a.y+b.y)/2+dx/d*bend;
+
+          const grad=ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+          const ca=a.color(), cb=b.color();
+          grad.addColorStop(0,`rgba(${ca[0]|0},${ca[1]|0},${ca[2]|0},${alpha})`);
+          grad.addColorStop(1,`rgba(${cb[0]|0},${cb[1]|0},${cb[2]|0},${alpha})`);
+
+          ctx.strokeStyle=grad;
+          ctx.lineWidth=0.8;
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y);
+          ctx.quadraticCurveTo(mx,my,b.x,b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    ctx.globalCompositeOperation="source-over";
+  }
+
+  function frame(now){
+    const dt=Math.min(2.2,(now-last)/16.6667);
+    last=now;
+    time=now;
+
+    pointer.strength+=(pointer.active?1:0-pointer.strength)*0.1;
+    if(!pointer.active) pointer.strength*=0.9;
+
+    ctx.fillStyle=`rgba(18,11,12,${CONFIG.trailAlpha})`;
+    ctx.fillRect(0,0,W,H);
+
+    for(const n of nodes) n.update(time);
+
+    drawConnections();
+
+    ctx.globalCompositeOperation="lighter";
+    for(const m of motes){
+      m.update(dt);
+      m.draw();
+    }
+    ctx.globalCompositeOperation="source-over";
+
+    for(const n of nodes) n.draw(time);
+
+    requestAnimationFrame(frame);
+  }
+
+  function setPointer(x,y,active){
+    pointer.x=x;
+    pointer.y=y;
+    pointer.active=active;
+  }
+
+  canvas.addEventListener("pointerdown",e=>{
+    canvas.setPointerCapture?.(e.pointerId);
+    setPointer(e.clientX,e.clientY,true);
+  });
+
+  canvas.addEventListener("pointermove",e=>{
+    if(e.pointerType==="mouse" || pointer.active){
+      setPointer(e.clientX,e.clientY,true);
+    }
+  });
+
+  canvas.addEventListener("pointerup",()=>pointer.active=false);
+  canvas.addEventListener("pointercancel",()=>pointer.active=false);
+  canvas.addEventListener("pointerleave",e=>{
+    if(e.pointerType==="mouse") pointer.active=false;
+  });
+
+  window.addEventListener("resize",resize);
+
+  resize();
+
+  while(motes.length<CONFIG.particleCount){
+    motes.push(new Mote());
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
