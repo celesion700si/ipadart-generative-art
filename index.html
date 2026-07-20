@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="iPadART Generative Art — interactive artworks by Ying-Pin Lin.">
+<title>iPadART Generative Art</title>
+<style>
+:root{--bg:#0d090b;--paper:#f3eee7;--gold:#d6a74c;--muted:#91878a}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;color:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;background:radial-gradient(circle at 75% 15%,#28101f 0,transparent 32%),var(--bg)}
+main{width:min(1180px,calc(100% - 40px));margin:auto;padding:32px 0 72px}
+nav{display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:1px solid #ffffff1c;font-size:12px;letter-spacing:.18em}
+nav a{color:var(--paper);text-decoration:none}.brand{font:600 19px Georgia,serif;letter-spacing:-.03em}.brand i{color:var(--gold)}
+header{padding:clamp(70px,12vw,150px) 0 70px}header p{font-size:10px;letter-spacing:.28em;color:var(--gold)}
+h1{max-width:800px;margin:20px 0 0;font:400 clamp(48px,8vw,108px)/.9 Georgia,serif;letter-spacing:-.055em}h1 i{color:var(--gold)}
+.intro{max-width:600px;margin:28px 0 0;color:var(--muted);font-size:15px;line-height:1.9}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}.work{position:relative;min-height:430px;padding:30px;border:1px solid #ffffff17;border-radius:2px;overflow:hidden;color:var(--paper);text-decoration:none;background:#100b0e;transition:.35s ease}
+.work:before{content:"";position:absolute;inset:0;opacity:.65;transition:.45s ease}.work:first-child:before{background:radial-gradient(circle at 65% 45%,#d6b068 0 1%,transparent 2%),radial-gradient(circle at 52% 38%,#60409e 0 1%,transparent 2%),repeating-radial-gradient(circle at 58% 42%,transparent 0 20px,#ffffff0d 21px 22px)}
+.work:last-child:before{background:radial-gradient(circle at 50% 20%,#f3a618 0 2%,transparent 3%),radial-gradient(circle at 48% 42%,#ee5569 0 3%,transparent 4%),radial-gradient(circle at 52% 70%,#c500bc 0 4%,transparent 5%)}
+.work:hover{transform:translateY(-5px);border-color:#d6a74c66}.work:hover:before{transform:scale(1.06);opacity:.9}
+.number,.meta,.work h2,.work p,.enter{position:relative;z-index:1}.number{font:italic 20px Georgia,serif;color:var(--gold)}.meta{margin-top:210px;font-size:9px;letter-spacing:.2em;color:#ffffff65}.work h2{margin:11px 0 8px;font:400 clamp(30px,4vw,52px)/1 Georgia,serif}.work p{max-width:440px;margin:0;color:var(--muted);font-size:13px;line-height:1.7}.enter{display:inline-block;margin-top:22px;font-size:10px;letter-spacing:.18em;color:var(--gold)}
+footer{display:flex;justify-content:space-between;margin-top:70px;padding-top:18px;border-top:1px solid #ffffff1c;color:#ffffff45;font-size:9px;letter-spacing:.15em}
+@media(max-width:760px){main{width:min(100% - 28px,1180px)}nav span{display:none}.grid{grid-template-columns:1fr}.work{min-height:390px}.work .meta{margin-top:180px}footer{display:block;line-height:2}}
+</style>
+</head>
+<body>
+<main>
+<nav><a class="brand" href="https://www.ipadart.net/">iPad<i>ART</i></a><span>GENERATIVE ART STUDIO</span><a href="https://www.ipadart.net/">回到主站 ↗</a></nav>
+<header><p>YING-PIN LIN · INTERACTIVE ARTWORKS</p><h1>Where pixels learn to <i>breathe.</i></h1><div class="intro">從繪畫的明暗，到演算法的流場；從自由粒子，到一座由教育者共同呼吸的島。這裡保存生成藝術作品，也保存每一次創作如何發生。</div></header>
+<section class="grid">
+<a class="work" href="./nocturne-mesh/"><span class="number">01</span><div class="meta">FOUNDATIONAL STUDY · 2026</div><h2>Nocturne Mesh</h2><p>《夜巡之網》——古典明暗對比與數位幾何點雲，在 Perlin Noise 流場中形成一張持續變動的夜之網。</p><span class="enter">ENTER THE FIELD →</span></a>
+<a class="work" href="./24-breaths/"><span class="number">02</span><div class="meta">TAIWAN ADE LIVING CONSTELLATION · 2026</div><h2>24 Breaths</h2><p>二十四個呼吸構成一座島。從《夜巡之網》的生成語法，轉化為臺灣 ADE 社群彼此影響、連結與共振的生命星座。</p><span class="enter">ENTER THE CONSTELLATION →</span></a>
+</section>
+<footer><span>© 2026 YING-PIN LIN</span><span>VISUAL ARTS · APPLE TECHNOLOGY · ARTFUL LEARNING</span></footer>
+</main>
+</body>
+</html>
