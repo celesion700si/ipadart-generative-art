@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Nocturne Mesh — 夜巡之網 · 幾何粒子流動</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+html,body{margin:0;padding:0;background:#000;overflow:hidden;height:100%;cursor:crosshair}canvas{display:block}
+#hint{position:fixed;left:24px;bottom:20px;font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif;font-size:12px;letter-spacing:.14em;color:rgba(200,205,212,.55);pointer-events:none;animation:hintFade 9s ease forwards}
+@keyframes hintFade{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
+</style>
+</head>
+<body>
+<div id="hint">移動滑鼠推開粒子 ｜ 按 D 鍵：模擬音訊呼吸（開／關）</div>
+<script>
+/*
+ Nocturne Mesh — 夜巡之網
+ 古典明暗對比（Chiaroscuro）× 數位幾何點雲
+ 純前端 p5.js｜物件導向粒子系統｜Perlin Noise 向量場
+*/
+const CONFIG={
+  particleCount:380,
+  baseSpeed:.65,
+  noiseScale:.0016,
+  noiseTimeSpeed:.0012,
+  linkDistance:92,
+  linkAlpha:42,
+  mouseRadius:130,
+  mouseForce:1.8,
+  trailFade:20,
+  volumeEase:.045
+};
+const PALETTE=[[96,64,158],[214,176,104],[202,208,216]];
+let volume=0,smoothedVolume=0,demoAudio=false;
+let particles=[],noiseT=0,lightPos;
+
+class Particle{
+  constructor(){this.reset(true)}
+  reset(firstTime=false){
+    this.pos=createVector(random(width),random(height));
+    this.vel=p5.Vector.random2D().mult(random(.1,.4));
+    this.acc=createVector(0,0);
+    this.size=random(1,2.6);
+    this.colorOffset=random(1000);
+    this.life=firstTime?random(200,900):random(500,900);
+    this.maxLife=this.life;
+  }
+  applyForce(f){this.acc.add(f)}
+  flow(noiseScale){
+    const angle=noise(this.pos.x*noiseScale,this.pos.y*noiseScale,noiseT)*TWO_PI*2;
+    const force=p5.Vector.fromAngle(angle);
+    force.mult(.045);
+    this.applyForce(force);
+  }
+  repel(mx,my){
+    const d=dist(this.pos.x,this.pos.y,mx,my);
+    if(d<CONFIG.mouseRadius&&d>1){
+      const push=p5.Vector.sub(this.pos,createVector(mx,my));
+      push.normalize();
+      push.mult(map(d,0,CONFIG.mouseRadius,CONFIG.mouseForce,0)*.12);
+      this.applyForce(push);
+    }
+  }
+  update(speedLimit){
+    this.vel.add(this.acc);
+    this.vel.limit(speedLimit);
+    this.pos.add(this.vel);
+    this.acc.mult(0);
+    if(this.pos.x<-10)this.pos.x=width+10;
+    if(this.pos.x>width+10)this.pos.x=-10;
+    if(this.pos.y<-10)this.pos.y=height+10;
+    if(this.pos.y>height+10)this.pos.y=-10;
+    this.life--;
+    if(this.life<=0)this.reset();
+  }
+  getColor(){
+    const t=noise(this.colorOffset+frameCount*.0015)*(PALETTE.length-1);
+    const i=floor(t)%PALETTE.length,j=(i+1)%PALETTE.length,f=t-floor(t);
+    return [
+      lerp(PALETTE[i][0],PALETTE[j][0],f),
+      lerp(PALETTE[i][1],PALETTE[j][1],f),
+      lerp(PALETTE[i][2],PALETTE[j][2],f)
+    ];
+  }
+  show(lightFactorFn){
+    const c=this.getColor(),lightFactor=lightFactorFn(this.pos.x,this.pos.y);
+    const lifeAlpha=min(1,this.life/60,(this.maxLife-this.life)/60);
+    noStroke();
+    fill(c[0],c[1],c[2],200*lightFactor*lifeAlpha);
+    circle(this.pos.x,this.pos.y,this.size);
+  }
+}
+function setup(){
+  createCanvas(windowWidth,windowHeight);
+  pixelDensity(1);
+  background(0);
+  lightPos=createVector(width*.5,height*.42);
+  for(let i=0;i<CONFIG.particleCount;i++)particles.push(new Particle());
+}
+function draw(){
+  noStroke();fill(0,CONFIG.trailFade);rect(0,0,width,height);
+  if(demoAudio){
+    volume=(sin(frameCount*.018)*.5+.5)*.7+(sin(frameCount*.047)*.5+.5)*.3;
+  }
+  smoothedVolume=lerp(smoothedVolume,constrain(volume,0,1),CONFIG.volumeEase);
+  const speedLimit=CONFIG.baseSpeed*(1+smoothedVolume*2.4);
+  const linkAlphaN=CONFIG.linkAlpha*(1+smoothedVolume*1.6);
+  const noiseScaleN=CONFIG.noiseScale*(1+smoothedVolume*1.9);
+  lightPos.x=width*(.5+.28*(noise(frameCount*.0009)-.5)*2);
+  lightPos.y=height*(.45+.24*(noise(1000+frameCount*.0009)-.5)*2);
+  const maxD=max(width,height)*.75;
+  const lightFactorFn=(x,y)=>constrain(map(dist(x,y,lightPos.x,lightPos.y),0,maxD,1,.25),.25,1);
+  for(const p of particles){p.flow(noiseScaleN);p.repel(mouseX,mouseY);p.update(speedLimit)}
+  const linkDistSq=CONFIG.linkDistance*CONFIG.linkDistance;
+  strokeWeight(.5);
+  for(let i=0;i<particles.length;i++){
+    const a=particles[i];
+    for(let j=i+1;j<particles.length;j++){
+      const b=particles[j],dx=a.pos.x-b.pos.x,dy=a.pos.y-b.pos.y,dSq=dx*dx+dy*dy;
+      if(dSq<linkDistSq){
+        const d=sqrt(dSq),midLight=lightFactorFn((a.pos.x+b.pos.x)/2,(a.pos.y+b.pos.y)/2);
+        const alpha=map(d,0,CONFIG.linkDistance,linkAlphaN,0)*midLight;
+        const ca=a.getColor(),cb=b.getColor();
+        stroke((ca[0]+cb[0])/2,(ca[1]+cb[1])/2,(ca[2]+cb[2])/2,alpha);
+        line(a.pos.x,a.pos.y,b.pos.x,b.pos.y);
+      }
+    }
+  }
+  for(const p of particles)p.show(lightFactorFn);
+  noiseT+=CONFIG.noiseTimeSpeed*(1+smoothedVolume*1.2);
+}
+function keyPressed(){
+  if(key==="d"||key==="D"){
+    demoAudio=!demoAudio;
+    if(!demoAudio)volume=0;
+  }
+}
+function touchMoved(){return false}
+function windowResized(){resizeCanvas(windowWidth,windowHeight);background(0)}
+</script>
+</body>
+</html>
