@@ -3,15 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Breathing Orbit — 呼吸軌道</title>
+  <title>Elastic Orbit — 失衡軌道</title>
   <script src="https://cdn.jsdelivr.net/npm/two.js@latest/build/two.min.js"></script>
   <style>
+    :root {
+      color-scheme: dark;
+    }
+
     html, body {
       width: 100%;
       height: 100%;
       margin: 0;
       overflow: hidden;
-      background: #0a0a0d;
+      background:
+        radial-gradient(circle at 64% 46%, rgba(30, 36, 48, 0.34), transparent 36%),
+        radial-gradient(circle at 24% 72%, rgba(43, 31, 37, 0.22), transparent 30%),
+        #08090c;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", sans-serif;
     }
 
@@ -27,50 +34,56 @@
       height: 100%;
     }
 
-    .title {
+    .caption {
       position: fixed;
-      top: 28px;
-      left: 32px;
-      z-index: 10;
-      color: rgba(255, 255, 255, 0.92);
+      top: 30px;
+      left: 34px;
+      z-index: 5;
       pointer-events: none;
+      transition: opacity 900ms ease;
     }
 
-    .title h1 {
+    .caption h1 {
       margin: 0;
-      font-size: clamp(18px, 2.4vw, 32px);
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      color: rgba(244, 241, 235, 0.88);
+      font-size: clamp(18px, 2vw, 28px);
+      font-weight: 520;
+      letter-spacing: 0.035em;
     }
 
-    .title p {
+    .caption p {
       margin: 8px 0 0;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 13px;
-      letter-spacing: 0.12em;
+      color: rgba(212, 217, 228, 0.38);
+      font-size: 11px;
+      letter-spacing: 0.17em;
     }
 
     .hint {
       position: fixed;
       right: 28px;
       bottom: 24px;
-      z-index: 10;
-      color: rgba(255, 255, 255, 0.42);
-      font-size: 12px;
+      z-index: 5;
+      color: rgba(225, 226, 232, 0.28);
+      font-size: 11px;
       letter-spacing: 0.08em;
       pointer-events: none;
+      transition: opacity 700ms ease;
+    }
+
+    body.engaged .caption,
+    body.engaged .hint {
+      opacity: 0.18;
     }
   </style>
 </head>
 <body>
-  <div class="title">
-    <h1>Breathing Orbit</h1>
-    <p>呼吸軌道 · TWO.JS STUDY 001</p>
+  <div class="caption">
+    <h1>Elastic Orbit</h1>
+    <p>失衡軌道 · TWO.JS STUDY 001</p>
   </div>
 
   <div id="artwork"></div>
-
-  <div class="hint">移動滑鼠或手指，改變軌道方向</div>
+  <div class="hint">靠近、牽引，然後放手</div>
 
   <script>
     const container = document.getElementById("artwork");
@@ -81,114 +94,226 @@
       autostart: true
     }).appendTo(container);
 
-    const orbitGroup = two.makeGroup();
-    const rings = [];
-    const satellites = [];
+    const FIELD = {
+      x: 0,
+      y: 0,
+      tx: 0,
+      ty: 0,
+      vx: 0,
+      vy: 0,
+      active: false,
+      energy: 0
+    };
 
-    const ringCount = 12;
-    const satelliteCount = 18;
+    const scene = two.makeGroup();
+    const membranes = [];
+    const motes = [];
+    const vertexCount = 72;
+    const membraneCount = 9;
 
-    let pointerX = 0;
-    let pointerY = 0;
-    let targetX = 0;
-    let targetY = 0;
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-    function createRings() {
-      for (let i = 0; i < ringCount; i++) {
-        const radius = 38 + i * 23;
-        const ring = two.makeCircle(0, 0, radius);
-        ring.noFill();
-        ring.stroke = `rgba(190, 205, 255, ${0.42 - i * 0.022})`;
-        ring.linewidth = i % 3 === 0 ? 1.6 : 0.75;
-        orbitGroup.add(ring);
-        rings.push(ring);
+    function makeMembrane(index) {
+      const vertices = [];
+      const radius = 58 + index * 31;
+      const phase = Math.random() * Math.PI * 2;
+
+      for (let i = 0; i < vertexCount; i++) {
+        const a = (i / vertexCount) * Math.PI * 2;
+        const radialDrift =
+          Math.sin(a * 2 + phase) * (2.2 + index * 0.32) +
+          Math.sin(a * 5 - phase * 0.7) * (0.9 + index * 0.16);
+
+        const homeX = Math.cos(a) * (radius + radialDrift);
+        const homeY = Math.sin(a) * (radius * 0.78 + radialDrift * 0.65);
+
+        const anchor = new Two.Anchor(homeX, homeY);
+        anchor.homeX = homeX;
+        anchor.homeY = homeY;
+        anchor.vx = 0;
+        anchor.vy = 0;
+        anchor.seed = Math.random() * 100;
+        vertices.push(anchor);
       }
+
+      const path = two.makePath(vertices, true, false, true);
+      path.noFill();
+      path.stroke = index % 3 === 0
+        ? `rgba(211, 218, 232, ${0.27 - index * 0.014})`
+        : `rgba(151, 164, 187, ${0.19 - index * 0.010})`;
+      path.linewidth = index % 3 === 0 ? 1.15 : 0.7;
+      path.cap = "round";
+      path.join = "round";
+
+      path.translation.set(index * 7 - 28, index * -4 + 18);
+      path.rotation = (index - membraneCount / 2) * 0.012;
+
+      scene.add(path);
+      membranes.push({ path, vertices, radius, phase, index });
     }
 
-    function createSatellites() {
-      for (let i = 0; i < satelliteCount; i++) {
-        const size = 2.5 + Math.random() * 5;
-        const dot = two.makeCircle(0, 0, size);
-        dot.noStroke();
-        dot.fill = i % 3 === 0
-          ? "rgba(255, 216, 165, 0.95)"
-          : "rgba(190, 210, 255, 0.82)";
-        dot.orbitRadius = 55 + Math.random() * 245;
-        dot.speed = 0.002 + Math.random() * 0.006;
-        dot.phase = Math.random() * Math.PI * 2;
-        dot.depth = 0.45 + Math.random() * 0.55;
-        orbitGroup.add(dot);
-        satellites.push(dot);
-      }
+    function makeMote(index) {
+      const mote = two.makeCircle(0, 0, index % 5 === 0 ? 2.2 : 1.15);
+      mote.noStroke();
+      mote.fill = index % 5 === 0
+        ? "rgba(235, 194, 150, 0.78)"
+        : "rgba(196, 207, 226, 0.48)";
+
+      mote.angle = Math.random() * Math.PI * 2;
+      mote.radius = 92 + Math.random() * 270;
+      mote.speed = (Math.random() * 0.0007 + 0.00018) * (Math.random() > 0.5 ? 1 : -1);
+      mote.offset = Math.random() * Math.PI * 2;
+      mote.drag = 0.92 + Math.random() * 0.045;
+      mote.vx = 0;
+      mote.vy = 0;
+      mote.depth = 0.45 + Math.random() * 0.9;
+
+      scene.add(mote);
+      motes.push(mote);
     }
 
-    const coreOuter = two.makeCircle(0, 0, 24);
-    coreOuter.noFill();
-    coreOuter.stroke = "rgba(255, 236, 210, 0.8)";
-    coreOuter.linewidth = 1.5;
+    for (let i = 0; i < membraneCount; i++) makeMembrane(i);
+    for (let i = 0; i < 34; i++) makeMote(i);
 
-    const coreInner = two.makeCircle(0, 0, 6);
-    coreInner.noStroke();
-    coreInner.fill = "rgba(255, 242, 220, 1)";
+    const nucleus = two.makeCircle(0, 0, 3.2);
+    nucleus.noStroke();
+    nucleus.fill = "rgba(244, 226, 204, 0.84)";
+    scene.add(nucleus);
 
-    orbitGroup.add(coreOuter, coreInner);
+    const halo = two.makeCircle(0, 0, 19);
+    halo.noFill();
+    halo.stroke = "rgba(235, 218, 199, 0.22)";
+    halo.linewidth = 0.8;
+    scene.add(halo);
 
-    createRings();
-    createSatellites();
-
-    function positionScene() {
-      orbitGroup.translation.set(two.width / 2, two.height / 2);
-      const responsiveScale = Math.min(two.width / 850, two.height / 850, 1.35);
-      orbitGroup.scale = Math.max(0.58, responsiveScale);
+    function resizeScene() {
+      scene.translation.set(two.width * 0.54, two.height * 0.53);
+      const scale = Math.min(two.width / 1050, two.height / 820);
+      scene.scale = clamp(scale, 0.62, 1.25);
     }
 
-    positionScene();
+    function localPointer(clientX, clientY) {
+      const scale = typeof scene.scale === "number" ? scene.scale : scene.scale.x;
+      return {
+        x: (clientX - scene.translation.x) / scale,
+        y: (clientY - scene.translation.y) / scale
+      };
+    }
 
-    function updatePointer(clientX, clientY) {
-      targetX = clientX / window.innerWidth - 0.5;
-      targetY = clientY / window.innerHeight - 0.5;
+    function setPointer(clientX, clientY, active = true) {
+      const p = localPointer(clientX, clientY);
+      FIELD.tx = p.x;
+      FIELD.ty = p.y;
+      FIELD.active = active;
+      document.body.classList.toggle("engaged", active);
     }
 
     window.addEventListener("pointermove", (event) => {
-      updatePointer(event.clientX, event.clientY);
+      setPointer(event.clientX, event.clientY, true);
     });
 
     window.addEventListener("pointerdown", (event) => {
-      updatePointer(event.clientX, event.clientY);
+      setPointer(event.clientX, event.clientY, true);
+      FIELD.energy = Math.min(1.8, FIELD.energy + 0.75);
     });
 
-    window.addEventListener("resize", positionScene);
+    window.addEventListener("pointerup", () => {
+      FIELD.active = false;
+      document.body.classList.remove("engaged");
+    });
+
+    window.addEventListener("pointerleave", () => {
+      FIELD.active = false;
+      document.body.classList.remove("engaged");
+    });
+
+    window.addEventListener("resize", resizeScene);
+    resizeScene();
 
     two.bind("update", (frameCount) => {
-      const time = frameCount * 0.016;
+      const time = frameCount * 0.014;
 
-      pointerX += (targetX - pointerX) * 0.045;
-      pointerY += (targetY - pointerY) * 0.045;
+      const spring = FIELD.active ? 0.055 : 0.018;
+      FIELD.vx += (FIELD.tx - FIELD.x) * spring;
+      FIELD.vy += (FIELD.ty - FIELD.y) * spring;
+      FIELD.vx *= FIELD.active ? 0.80 : 0.90;
+      FIELD.vy *= FIELD.active ? 0.80 : 0.90;
+      FIELD.x += FIELD.vx;
+      FIELD.y += FIELD.vy;
+      FIELD.energy *= 0.972;
 
-      orbitGroup.rotation += 0.0008 + pointerX * 0.0015;
+      membranes.forEach((membrane) => {
+        const layerDelay = membrane.index * 0.14;
+        const stiffness = 0.0105 - membrane.index * 0.00048;
+        const damping = 0.885 + membrane.index * 0.004;
 
-      rings.forEach((ring, index) => {
-        const breathing = 1 + Math.sin(time * 0.85 + index * 0.48) * (0.012 + index * 0.0008);
-        ring.scale = breathing;
-        ring.rotation = Math.sin(time * 0.22 + index * 0.32) * 0.05 * pointerX;
+        membrane.vertices.forEach((vertex, i) => {
+          const wave =
+            Math.sin(time * 0.62 + i * 0.21 + membrane.phase) * (1.2 + membrane.index * 0.22) +
+            Math.sin(time * 0.19 - i * 0.09 + membrane.index) * 1.1;
+
+          const angle = (i / vertexCount) * Math.PI * 2;
+          const idleX = Math.cos(angle) * wave;
+          const idleY = Math.sin(angle) * wave * 0.72;
+
+          const dx = FIELD.x - vertex.x;
+          const dy = FIELD.y - vertex.y;
+          const dist = Math.max(1, Math.hypot(dx, dy));
+          const radius = 155 + FIELD.energy * 70;
+          const influence = FIELD.active
+            ? Math.pow(clamp(1 - dist / radius, 0, 1), 2.2)
+            : 0;
+
+          const pull = influence * (18 + membrane.index * 2.4);
+          const tangent = Math.sin(time * 0.7 + layerDelay + i * 0.17) * influence * 4.5;
+
+          const targetX = vertex.homeX + idleX + (dx / dist) * pull - (dy / dist) * tangent;
+          const targetY = vertex.homeY + idleY + (dy / dist) * pull + (dx / dist) * tangent;
+
+          vertex.vx += (targetX - vertex.x) * stiffness;
+          vertex.vy += (targetY - vertex.y) * stiffness;
+          vertex.vx *= damping;
+          vertex.vy *= damping;
+          vertex.x += vertex.vx;
+          vertex.y += vertex.vy;
+        });
+
+        membrane.path.rotation =
+          Math.sin(time * 0.07 + membrane.phase) * 0.018 +
+          FIELD.x * 0.000018 * (membrane.index - 3);
       });
 
-      satellites.forEach((dot, index) => {
-        const angle = dot.phase + frameCount * dot.speed * (index % 2 === 0 ? 1 : -1);
-        const horizontalPull = 1 + pointerX * 0.5;
-        const verticalPull = 0.72 + pointerY * 0.35;
+      motes.forEach((mote, index) => {
+        mote.angle += mote.speed * (1 + FIELD.energy * 0.9);
 
-        dot.translation.x = Math.cos(angle) * dot.orbitRadius * horizontalPull;
-        dot.translation.y = Math.sin(angle) * dot.orbitRadius * verticalPull;
+        const baseX = Math.cos(mote.angle + mote.offset) * mote.radius;
+        const baseY = Math.sin(mote.angle + mote.offset) * mote.radius * 0.72;
 
-        const pulse = 0.75 + Math.sin(time * 1.4 + dot.phase) * 0.3;
-        dot.scale = pulse * dot.depth;
-        dot.opacity = 0.45 + pulse * 0.42;
+        const dx = FIELD.x - mote.translation.x;
+        const dy = FIELD.y - mote.translation.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const influence = FIELD.active ? clamp(1 - dist / 190, 0, 1) : 0;
+
+        mote.vx += (baseX - mote.translation.x) * 0.0038;
+        mote.vy += (baseY - mote.translation.y) * 0.0038;
+        mote.vx += (dx / dist) * influence * 0.16;
+        mote.vy += (dy / dist) * influence * 0.16;
+        mote.vx *= mote.drag;
+        mote.vy *= mote.drag;
+
+        mote.translation.x += mote.vx;
+        mote.translation.y += mote.vy;
+        mote.opacity = 0.14 + (Math.sin(time * 0.9 + index) + 1) * 0.14 + influence * 0.36;
+        mote.scale = mote.depth * (0.7 + influence * 0.8);
       });
 
-      const corePulse = 1 + Math.sin(time * 1.15) * 0.16;
-      coreOuter.scale = corePulse;
-      coreInner.scale = 0.9 + Math.sin(time * 1.15) * 0.12;
+      const pulse = 1 + Math.sin(time * 0.55) * 0.10 + FIELD.energy * 0.08;
+      halo.scale = pulse;
+      halo.translation.set(FIELD.x * 0.035, FIELD.y * 0.035);
+      nucleus.translation.set(FIELD.x * 0.012, FIELD.y * 0.012);
+      nucleus.scale = 0.92 + Math.sin(time * 0.8) * 0.1;
+
+      scene.rotation = Math.sin(time * 0.045) * 0.012;
     });
   </script>
 </body>
