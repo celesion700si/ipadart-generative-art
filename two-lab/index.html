@@ -7,8 +7,18 @@
   <script src="https://cdn.jsdelivr.net/npm/two.js@latest/build/two.min.js"></script>
   <style>
     :root {
-      color-scheme: dark;
+      --eraser: #F9F9F9;
+      --eraser-2: #E6E5E4;
+      --navy: #252A4D;
+      --teal-1: #45BFDB;
+      --teal-2: #6DD9F2;
+      --teal-3: #99ECFF;
+      --matcha: #DEF089;
+      --bubblegum: #FAB5E3;
+      --ink-2: #2C3033;
     }
+
+    * { box-sizing: border-box; }
 
     html, body {
       width: 100%;
@@ -16,17 +26,33 @@
       margin: 0;
       overflow: hidden;
       background:
-        radial-gradient(circle at 64% 46%, rgba(30, 36, 48, 0.34), transparent 36%),
-        radial-gradient(circle at 24% 72%, rgba(43, 31, 37, 0.22), transparent 30%),
-        #08090c;
+        radial-gradient(circle at 70% 42%, rgba(109, 217, 242, 0.18), transparent 31%),
+        radial-gradient(circle at 27% 75%, rgba(227, 211, 245, 0.26), transparent 28%),
+        var(--eraser);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.28;
+      background-image:
+        linear-gradient(rgba(37, 42, 77, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 42, 77, 0.045) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(circle at 56% 52%, black, transparent 76%);
     }
 
     #artwork {
       position: fixed;
       inset: 0;
       touch-action: none;
+      cursor: grab;
     }
+
+    body.dragging #artwork { cursor: grabbing; }
 
     #artwork svg {
       display: block;
@@ -36,44 +62,47 @@
 
     .caption {
       position: fixed;
-      top: 30px;
-      left: 34px;
+      top: 32px;
+      left: 36px;
       z-index: 5;
       pointer-events: none;
-      transition: opacity 900ms ease;
+      transition: opacity 500ms ease, transform 500ms ease;
     }
 
     .caption h1 {
       margin: 0;
-      color: rgba(244, 241, 235, 0.88);
-      font-size: clamp(18px, 2vw, 28px);
-      font-weight: 520;
-      letter-spacing: 0.035em;
+      color: var(--navy);
+      font-size: clamp(20px, 2.2vw, 32px);
+      font-weight: 650;
+      letter-spacing: -0.025em;
     }
 
     .caption p {
-      margin: 8px 0 0;
-      color: rgba(212, 217, 228, 0.38);
+      margin: 7px 0 0;
+      color: rgba(37, 42, 77, 0.52);
       font-size: 11px;
-      letter-spacing: 0.17em;
+      font-weight: 600;
+      letter-spacing: 0.16em;
     }
 
     .hint {
       position: fixed;
-      right: 28px;
-      bottom: 24px;
+      right: 30px;
+      bottom: 26px;
       z-index: 5;
-      color: rgba(225, 226, 232, 0.28);
-      font-size: 11px;
-      letter-spacing: 0.08em;
+      color: rgba(37, 42, 77, 0.48);
+      font-size: 12px;
+      font-weight: 560;
       pointer-events: none;
-      transition: opacity 700ms ease;
+      transition: opacity 450ms ease;
     }
 
-    body.engaged .caption,
-    body.engaged .hint {
-      opacity: 0.18;
+    body.engaged .caption {
+      opacity: 0.28;
+      transform: translateY(-3px);
     }
+
+    body.engaged .hint { opacity: 0.12; }
   </style>
 </head>
 <body>
@@ -83,7 +112,7 @@
   </div>
 
   <div id="artwork"></div>
-  <div class="hint">靠近、牽引，然後放手</div>
+  <div class="hint">靠近可牽引 · 按住拖曳可拉開結構</div>
 
   <script>
     const container = document.getElementById("artwork");
@@ -94,102 +123,107 @@
       autostart: true
     }).appendTo(container);
 
+    const COLORS = {
+      navy: "#252A4D",
+      teal1: "#45BFDB",
+      teal2: "#6DD9F2",
+      teal3: "#99ECFF",
+      matcha: "#DEF089",
+      bubblegum: "#FAB5E3",
+      eraser2: "#E6E5E4"
+    };
+
     const FIELD = {
-      x: 0,
-      y: 0,
-      tx: 0,
-      ty: 0,
-      vx: 0,
-      vy: 0,
-      active: false,
-      energy: 0
+      x: 0, y: 0,
+      tx: 0, ty: 0,
+      vx: 0, vy: 0,
+      inside: false,
+      pressed: false,
+      energy: 0,
+      speed: 0
     };
 
     const scene = two.makeGroup();
     const membranes = [];
-    const motes = [];
-    const vertexCount = 72;
-    const membraneCount = 9;
+    const nodes = [];
+    const vertexCount = 84;
+    const membraneCount = 10;
 
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
     function makeMembrane(index) {
       const vertices = [];
-      const radius = 58 + index * 31;
-      const phase = Math.random() * Math.PI * 2;
+      const radius = 54 + index * 30;
+      const phase = index * 0.73 + Math.random() * 0.4;
 
       for (let i = 0; i < vertexCount; i++) {
         const a = (i / vertexCount) * Math.PI * 2;
-        const radialDrift =
-          Math.sin(a * 2 + phase) * (2.2 + index * 0.32) +
-          Math.sin(a * 5 - phase * 0.7) * (0.9 + index * 0.16);
+        const drift =
+          Math.sin(a * 2 + phase) * (2.5 + index * 0.34) +
+          Math.sin(a * 5 - phase) * (1.2 + index * 0.18);
 
-        const homeX = Math.cos(a) * (radius + radialDrift);
-        const homeY = Math.sin(a) * (radius * 0.78 + radialDrift * 0.65);
-
+        const homeX = Math.cos(a) * (radius + drift);
+        const homeY = Math.sin(a) * (radius * 0.72 + drift * 0.8);
         const anchor = new Two.Anchor(homeX, homeY);
+
         anchor.homeX = homeX;
         anchor.homeY = homeY;
         anchor.vx = 0;
         anchor.vy = 0;
-        anchor.seed = Math.random() * 100;
+        anchor.strain = 0;
         vertices.push(anchor);
       }
 
       const path = two.makePath(vertices, true, false, true);
       path.noFill();
-      path.stroke = index % 3 === 0
-        ? `rgba(211, 218, 232, ${0.27 - index * 0.014})`
-        : `rgba(151, 164, 187, ${0.19 - index * 0.010})`;
-      path.linewidth = index % 3 === 0 ? 1.15 : 0.7;
+      path.stroke = index === 0
+        ? COLORS.navy
+        : index < 4
+          ? COLORS.teal1
+          : index < 8
+            ? COLORS.teal2
+            : COLORS.teal3;
+      path.opacity = index === 0 ? 0.88 : 0.54 - index * 0.026;
+      path.linewidth = index === 0 ? 2.2 : index % 3 === 0 ? 1.55 : 1.05;
       path.cap = "round";
       path.join = "round";
-
-      path.translation.set(index * 7 - 28, index * -4 + 18);
-      path.rotation = (index - membraneCount / 2) * 0.012;
+      path.translation.set(index * 7 - 30, index * -4 + 20);
+      path.rotation = (index - membraneCount / 2) * 0.014;
 
       scene.add(path);
       membranes.push({ path, vertices, radius, phase, index });
     }
 
-    function makeMote(index) {
-      const mote = two.makeCircle(0, 0, index % 5 === 0 ? 2.2 : 1.15);
-      mote.noStroke();
-      mote.fill = index % 5 === 0
-        ? "rgba(235, 194, 150, 0.78)"
-        : "rgba(196, 207, 226, 0.48)";
-
-      mote.angle = Math.random() * Math.PI * 2;
-      mote.radius = 92 + Math.random() * 270;
-      mote.speed = (Math.random() * 0.0007 + 0.00018) * (Math.random() > 0.5 ? 1 : -1);
-      mote.offset = Math.random() * Math.PI * 2;
-      mote.drag = 0.92 + Math.random() * 0.045;
-      mote.vx = 0;
-      mote.vy = 0;
-      mote.depth = 0.45 + Math.random() * 0.9;
-
-      scene.add(mote);
-      motes.push(mote);
+    function makeNode(index) {
+      const node = two.makeCircle(0, 0, index % 4 === 0 ? 3.1 : 2.05);
+      node.noStroke();
+      node.fill = index % 7 === 0 ? COLORS.bubblegum : COLORS.matcha;
+      node.opacity = 0;
+      node.scale = 0.4;
+      scene.add(node);
+      nodes.push(node);
     }
 
     for (let i = 0; i < membraneCount; i++) makeMembrane(i);
-    for (let i = 0; i < 34; i++) makeMote(i);
+    for (let i = 0; i < 30; i++) makeNode(i);
 
-    const nucleus = two.makeCircle(0, 0, 3.2);
-    nucleus.noStroke();
-    nucleus.fill = "rgba(244, 226, 204, 0.84)";
-    scene.add(nucleus);
+    const fieldHalo = two.makeCircle(0, 0, 44);
+    fieldHalo.noFill();
+    fieldHalo.stroke = COLORS.teal1;
+    fieldHalo.linewidth = 1.4;
+    fieldHalo.opacity = 0;
+    scene.add(fieldHalo);
 
-    const halo = two.makeCircle(0, 0, 19);
-    halo.noFill();
-    halo.stroke = "rgba(235, 218, 199, 0.22)";
-    halo.linewidth = 0.8;
-    scene.add(halo);
+    const fieldCore = two.makeCircle(0, 0, 6.5);
+    fieldCore.noStroke();
+    fieldCore.fill = COLORS.navy;
+    fieldCore.opacity = 0;
+    scene.add(fieldCore);
 
     function resizeScene() {
-      scene.translation.set(two.width * 0.54, two.height * 0.53);
-      const scale = Math.min(two.width / 1050, two.height / 820);
-      scene.scale = clamp(scale, 0.62, 1.25);
+      scene.translation.set(two.width * 0.56, two.height * 0.54);
+      const scale = Math.min(two.width / 1060, two.height / 810);
+      scene.scale = clamp(scale, 0.58, 1.3);
     }
 
     function localPointer(clientX, clientY) {
@@ -200,75 +234,100 @@
       };
     }
 
-    function setPointer(clientX, clientY, active = true) {
+    function setPointer(clientX, clientY) {
       const p = localPointer(clientX, clientY);
       FIELD.tx = p.x;
       FIELD.ty = p.y;
-      FIELD.active = active;
-      document.body.classList.toggle("engaged", active);
+      FIELD.inside = true;
+      document.body.classList.add("engaged");
     }
 
     window.addEventListener("pointermove", (event) => {
-      setPointer(event.clientX, event.clientY, true);
+      setPointer(event.clientX, event.clientY);
     });
 
     window.addEventListener("pointerdown", (event) => {
-      setPointer(event.clientX, event.clientY, true);
-      FIELD.energy = Math.min(1.8, FIELD.energy + 0.75);
+      setPointer(event.clientX, event.clientY);
+      FIELD.pressed = true;
+      FIELD.energy = Math.min(2.4, FIELD.energy + 1.1);
+      document.body.classList.add("dragging");
     });
 
     window.addEventListener("pointerup", () => {
-      FIELD.active = false;
-      document.body.classList.remove("engaged");
+      FIELD.pressed = false;
+      document.body.classList.remove("dragging");
     });
 
     window.addEventListener("pointerleave", () => {
-      FIELD.active = false;
-      document.body.classList.remove("engaged");
+      FIELD.inside = false;
+      FIELD.pressed = false;
+      document.body.classList.remove("engaged", "dragging");
     });
 
     window.addEventListener("resize", resizeScene);
     resizeScene();
 
     two.bind("update", (frameCount) => {
-      const time = frameCount * 0.014;
+      const time = frameCount * 0.016;
 
-      const spring = FIELD.active ? 0.055 : 0.018;
-      FIELD.vx += (FIELD.tx - FIELD.x) * spring;
-      FIELD.vy += (FIELD.ty - FIELD.y) * spring;
-      FIELD.vx *= FIELD.active ? 0.80 : 0.90;
-      FIELD.vy *= FIELD.active ? 0.80 : 0.90;
+      const oldX = FIELD.x;
+      const oldY = FIELD.y;
+      const pointerSpring = FIELD.pressed ? 0.19 : 0.105;
+      FIELD.vx += (FIELD.tx - FIELD.x) * pointerSpring;
+      FIELD.vy += (FIELD.ty - FIELD.y) * pointerSpring;
+      FIELD.vx *= FIELD.pressed ? 0.62 : 0.72;
+      FIELD.vy *= FIELD.pressed ? 0.62 : 0.72;
       FIELD.x += FIELD.vx;
       FIELD.y += FIELD.vy;
-      FIELD.energy *= 0.972;
+      FIELD.speed = Math.hypot(FIELD.x - oldX, FIELD.y - oldY);
+      FIELD.energy *= FIELD.pressed ? 0.992 : 0.955;
+
+      const activeStrength = FIELD.inside ? (FIELD.pressed ? 1.95 : 0.92) : 0;
+      let nodeCursor = 0;
 
       membranes.forEach((membrane) => {
-        const layerDelay = membrane.index * 0.14;
-        const stiffness = 0.0105 - membrane.index * 0.00048;
-        const damping = 0.885 + membrane.index * 0.004;
+        const layer = membrane.index / (membraneCount - 1);
+        const stiffness = 0.052 - layer * 0.038;
+        const damping = 0.69 + layer * 0.245;
+        const pullRadius = 215 + membrane.index * 9 + FIELD.energy * 34;
+        const maxPull = (FIELD.pressed ? 132 : 68) * (1 - layer * 0.28);
+
+        let strongestVertex = null;
+        let strongestInfluence = 0;
 
         membrane.vertices.forEach((vertex, i) => {
-          const wave =
-            Math.sin(time * 0.62 + i * 0.21 + membrane.phase) * (1.2 + membrane.index * 0.22) +
-            Math.sin(time * 0.19 - i * 0.09 + membrane.index) * 1.1;
-
           const angle = (i / vertexCount) * Math.PI * 2;
-          const idleX = Math.cos(angle) * wave;
-          const idleY = Math.sin(angle) * wave * 0.72;
+          const idle =
+            Math.sin(time * 0.44 + i * 0.18 + membrane.phase) * (1.3 + membrane.index * 0.3) +
+            Math.sin(time * 0.13 - i * 0.07 + membrane.index) * 1.4;
 
           const dx = FIELD.x - vertex.x;
           const dy = FIELD.y - vertex.y;
           const dist = Math.max(1, Math.hypot(dx, dy));
-          const radius = 155 + FIELD.energy * 70;
-          const influence = FIELD.active
-            ? Math.pow(clamp(1 - dist / radius, 0, 1), 2.2)
-            : 0;
+          const influence = activeStrength * Math.pow(clamp(1 - dist / pullRadius, 0, 1), 1.45);
 
-          const pull = influence * (18 + membrane.index * 2.4);
-          const tangent = Math.sin(time * 0.7 + layerDelay + i * 0.17) * influence * 4.5;
+          if (influence > strongestInfluence) {
+            strongestInfluence = influence;
+            strongestVertex = vertex;
+          }
 
-          const targetX = vertex.homeX + idleX + (dx / dist) * pull - (dy / dist) * tangent;
-          const targetY = vertex.homeY + idleY + (dy / dist) * pull + (dx / dist) * tangent;
+          const directionalPull = influence * maxPull;
+          const shear = influence * Math.sin(i * 0.26 + time * 1.1 - membrane.index * 0.55) * 28;
+          const wake = influence * FIELD.speed * 1.8;
+
+          const targetX =
+            vertex.homeX +
+            Math.cos(angle) * idle +
+            (dx / dist) * directionalPull -
+            (dy / dist) * shear -
+            FIELD.vx * wake;
+
+          const targetY =
+            vertex.homeY +
+            Math.sin(angle) * idle * 0.84 +
+            (dy / dist) * directionalPull +
+            (dx / dist) * shear -
+            FIELD.vy * wake;
 
           vertex.vx += (targetX - vertex.x) * stiffness;
           vertex.vy += (targetY - vertex.y) * stiffness;
@@ -276,44 +335,47 @@
           vertex.vy *= damping;
           vertex.x += vertex.vx;
           vertex.y += vertex.vy;
+
+          vertex.strain = Math.hypot(vertex.x - vertex.homeX, vertex.y - vertex.homeY);
         });
 
+        const strain = strongestVertex ? strongestVertex.strain : 0;
+        membrane.path.linewidth =
+          (membrane.index === 0 ? 2.2 : membrane.index % 3 === 0 ? 1.55 : 1.05) +
+          clamp(strain / 90, 0, 1.4);
+
         membrane.path.rotation =
-          Math.sin(time * 0.07 + membrane.phase) * 0.018 +
-          FIELD.x * 0.000018 * (membrane.index - 3);
+          Math.sin(time * 0.055 + membrane.phase) * 0.018 +
+          FIELD.vx * 0.00065 * (membrane.index - 4.5);
+
+        if (strongestVertex && strongestInfluence > 0.16 && nodeCursor < nodes.length) {
+          const node = nodes[nodeCursor++];
+          node.translation.set(
+            strongestVertex.x + membrane.path.translation.x,
+            strongestVertex.y + membrane.path.translation.y
+          );
+          node.opacity = clamp(strongestInfluence * 0.95, 0, 0.92);
+          node.scale = 0.55 + clamp(strain / 58, 0, 1.8);
+          node.fill = membrane.index % 3 === 0 ? COLORS.bubblegum : COLORS.matcha;
+        }
       });
 
-      motes.forEach((mote, index) => {
-        mote.angle += mote.speed * (1 + FIELD.energy * 0.9);
-
-        const baseX = Math.cos(mote.angle + mote.offset) * mote.radius;
-        const baseY = Math.sin(mote.angle + mote.offset) * mote.radius * 0.72;
-
-        const dx = FIELD.x - mote.translation.x;
-        const dy = FIELD.y - mote.translation.y;
-        const dist = Math.max(1, Math.hypot(dx, dy));
-        const influence = FIELD.active ? clamp(1 - dist / 190, 0, 1) : 0;
-
-        mote.vx += (baseX - mote.translation.x) * 0.0038;
-        mote.vy += (baseY - mote.translation.y) * 0.0038;
-        mote.vx += (dx / dist) * influence * 0.16;
-        mote.vy += (dy / dist) * influence * 0.16;
-        mote.vx *= mote.drag;
-        mote.vy *= mote.drag;
-
-        mote.translation.x += mote.vx;
-        mote.translation.y += mote.vy;
-        mote.opacity = 0.14 + (Math.sin(time * 0.9 + index) + 1) * 0.14 + influence * 0.36;
-        mote.scale = mote.depth * (0.7 + influence * 0.8);
+      nodes.forEach((node, index) => {
+        if (index >= nodeCursor) {
+          node.opacity *= 0.82;
+          node.scale += (0.4 - node.scale) * 0.16;
+        }
       });
 
-      const pulse = 1 + Math.sin(time * 0.55) * 0.10 + FIELD.energy * 0.08;
-      halo.scale = pulse;
-      halo.translation.set(FIELD.x * 0.035, FIELD.y * 0.035);
-      nucleus.translation.set(FIELD.x * 0.012, FIELD.y * 0.012);
-      nucleus.scale = 0.92 + Math.sin(time * 0.8) * 0.1;
+      fieldHalo.translation.set(FIELD.x, FIELD.y);
+      fieldCore.translation.set(FIELD.x, FIELD.y);
+      fieldHalo.opacity += ((FIELD.inside ? 0.34 : 0) - fieldHalo.opacity) * 0.18;
+      fieldCore.opacity += ((FIELD.inside ? 0.82 : 0) - fieldCore.opacity) * 0.2;
+      fieldHalo.scale = 1 + FIELD.energy * 0.28 + Math.sin(time * 2.1) * 0.035;
+      fieldCore.scale = FIELD.pressed ? 1.35 : 0.88 + FIELD.speed * 0.025;
+      fieldCore.fill = FIELD.pressed ? COLORS.teal1 : COLORS.navy;
 
-      scene.rotation = Math.sin(time * 0.045) * 0.012;
+      scene.rotation = Math.sin(time * 0.035) * 0.01;
     });
   </script>
 </body>
