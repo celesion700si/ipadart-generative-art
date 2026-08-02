@@ -1,0 +1,194 @@
+.round-button,
+.quiet-button,
+.action-button {
+  border: 1px solid rgba(220, 231, 232, .14);
+  color: rgba(220, 231, 232, .8);
+  background: rgba(7, 8, 11, .38);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+}
+
+.round-button:focus-visible,
+.quiet-button:focus-visible,
+.action-button:focus-visible {
+  outline: 2px solid rgba(154, 220, 224, .9);
+  outline-offset: 3px;
+}
+
+.round-button {
+  position: fixed;
+  z-index: 4;
+  right: var(--safe-right);
+  bottom: var(--safe-bottom);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-style: italic;
+  transition: background-color .4s ease, border-color .4s ease, opacity .4s ease;
+}
+
+.round-button:hover { background: rgba(18, 23, 32, .58); }
+
+.panel-backdrop {
+  position: fixed;
+  z-index: 5;
+  inset: 0;
+  background: rgba(2, 3, 5, .38);
+  opacity: 0;
+  transition: opacity .55s ease;
+}
+
+.info-panel {
+  position: fixed;
+  z-index: 6;
+  top: 50%;
+  right: max(24px, env(safe-area-inset-right));
+  width: min(430px, calc(100vw - 48px));
+  max-height: min(760px, calc(100vh - 48px));
+  padding: 30px;
+  overflow: auto;
+  transform: translateY(calc(-50% + 16px));
+  border: 1px solid rgba(220, 231, 232, .11);
+  border-radius: 26px;
+  background: rgba(9, 11, 16, .76);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .26);
+  -webkit-backdrop-filter: blur(30px) saturate(115%);
+  backdrop-filter: blur(30px) saturate(115%);
+  opacity: 0;
+  transition: opacity .55s ease, transform .55s cubic-bezier(.22, .8, .22, 1);
+}
+
+.info-panel.is-open {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+.panel-backdrop.is-open { opacity: 1; }
+
+.panel-handle { display: none; }
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 430;
+  letter-spacing: -.025em;
+}
+
+.quiet-button {
+  padding: 7px 10px;
+  border-color: transparent;
+  border-radius: 999px;
+  color: rgba(220, 231, 232, .5);
+  font-size: 11px;
+}
+
+.statement {
+  margin: 28px 0;
+  color: rgba(220, 231, 232, .68);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.instructions {
+  margin: 0;
+  border-top: 1px solid rgba(220, 231, 232, .09);
+}
+
+.instructions div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(220, 231, 232, .09);
+}
+
+.instructions dt {
+  color: rgba(154, 220, 224, .72);
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+
+.instructions dd {
+  margin: 0;
+  color: rgba(220, 231, 232, .55);
+  font-size: 12px;
+}
+
+.panel-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.action-button {
+  min-height: 44px;
+  border-radius: 999px;
+  font-size: 12px;
+  transition: background-color .35s ease, border-color .35s ease;
+}
+
+.action-button:hover {
+  border-color: rgba(154, 220, 224, .25);
+  background: rgba(25, 34, 43, .52);
+}
+
+.keyboard-note {
+  margin: 18px 0 0;
+  color: rgba(220, 231, 232, .3);
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (max-width: 640px), (orientation: portrait) and (max-width: 900px) {
+  .info-panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: min(72vh, 680px);
+    padding: 14px max(22px, env(safe-area-inset-right))
+      calc(22px + env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+    transform: translateY(24px);
+    border-width: 1px 0 0;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .info-panel.is-open { transform: translateY(0); }
+  .panel-handle {
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: 0 auto 20px;
+    border-radius: 99px;
+    background: rgba(220, 231, 232, .18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .info-panel,
+  .panel-backdrop { transition-duration: .18s; }
+}
