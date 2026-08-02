@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07080b">
+  <meta name="color-scheme" content="dark">
+  <title>Luminous Kaleidoscope｜微光折境</title>
+  <meta name="description" content="一個由觀看者的靠近與停留，使微光被折疊、延遲並留下記憶的互動空間。">
+  <meta name="author" content="Ying-Pin Lin">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://lab.ipadart.net/luminous-kaleidoscope/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="zh_TW">
+  <meta property="og:site_name" content="iPadART Interactive Lab">
+  <meta property="og:title" content="Luminous Kaleidoscope｜微光折境">
+  <meta property="og:description" content="觀看者的靠近與停留，使微光被折疊、延遲並留下記憶的互動作品。">
+  <meta property="og:url" content="https://lab.ipadart.net/luminous-kaleidoscope/">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="./src/css/luminous-kaleidoscope.css">
+  <link rel="stylesheet" href="./src/css/artwork-ui.css">
+</head>
+<body>
+  <main id="artwork" aria-label="Luminous Kaleidoscope 互動作品">
+    <div id="canvas-container" aria-hidden="true"></div>
+
+    <header class="artwork-title" aria-label="作品標題">
+      <p class="eyebrow">iPadART Interactive Lab · Prototype 0.1</p>
+      <h1>Luminous Kaleidoscope</h1>
+      <p>微光折境</p>
+    </header>
+
+    <p id="gesture-hint" class="gesture-hint" role="status">
+      Move slowly. Light remembers.<br><span>慢慢移動，光會記得。</span>
+    </p>
+
+    <button id="info-button" class="round-button" type="button"
+      aria-controls="info-panel" aria-expanded="false" aria-label="開啟作品資訊">
+      <span aria-hidden="true">i</span>
+    </button>
+
+    <section id="info-panel" class="info-panel" aria-labelledby="info-title" hidden>
+      <div class="panel-handle" aria-hidden="true"></div>
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">About the work</p>
+          <h2 id="info-title">光會記得你的觀看</h2>
+        </div>
+        <button id="close-button" class="quiet-button" type="button" aria-label="關閉作品資訊">Close</button>
+      </div>
+      <p class="statement">
+        這不是一只被轉動的萬花筒。它更像一間暗室：觀看者每靠近一次，
+        光便記住一次；而當手離開，空間仍在非常緩慢地回想。
+      </p>
+      <dl class="instructions">
+        <div><dt>Move</dt><dd>改變觀看位置</dd></div>
+        <div><dt>Trace</dt><dd>慢速留下較長記憶</dd></div>
+        <div><dt>Hold</dt><dd>讓微光逐漸聚焦</dd></div>
+      </dl>
+      <div class="panel-actions">
+        <button id="pause-button" class="action-button" type="button">Pause</button>
+        <button id="reset-button" class="action-button" type="button">Slow reset</button>
+      </div>
+      <p class="keyboard-note">Keyboard: Space to pause · R to reset · Esc to close</p>
+    </section>
+    <div id="panel-backdrop" class="panel-backdrop" hidden></div>
+    <p id="live-status" class="visually-hidden" aria-live="polite"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.min.js"></script>
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
