@@ -3,6 +3,11 @@
 73d77c6f4ebd8f378118ec1e8715988df0decd53bb0174c69670c94d79c75e58  ./cyber2019.rfjh.ntpc.edu.tw/css/halkaBox.min.css
 931d7a9d44e5351c84a5d93b72fa67a9b95b0db4defe7003ba5f68dae61e192c  ./cyber2019.rfjh.ntpc.edu.tw/css/ionicons.min.css
 11b7448c22b34dae17fdace8778630f6e9bab3e826c1a1ca960284359ab453b0  ./cyber2019.rfjh.ntpc.edu.tw/css/plyr.css
+40678900b080506738c4e21b032a15f04737488dfc037a04157458ecd6545da4  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons.eot
+e41bb28b5ae98990290c2c79860ce12a97b9a8c3f0dd57f01de8c01e11d2a31d  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons.svg
+bdc253333d0b60b2c7904c523535e6f5434d79f78c14160f2e021be864b822be  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons.ttf
+937cc5ad51ad99a9a0871971eac31d0508336184f1af3d2c2d75cd33d03f8735  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons.woff
+2d02d165cb720aec2fde78a93113a459729e0503951353f719076bc5b4a7a845  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons.woff2
 40678900b080506738c4e21b032a15f04737488dfc037a04157458ecd6545da4  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons__q_c9bc33416224.eot
 e41bb28b5ae98990290c2c79860ce12a97b9a8c3f0dd57f01de8c01e11d2a31d  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons__q_c9bc33416224.svg
 bdc253333d0b60b2c7904c523535e6f5434d79f78c14160f2e021be864b822be  ./cyber2019.rfjh.ntpc.edu.tw/fonts/ionicons__q_c9bc33416224.ttf

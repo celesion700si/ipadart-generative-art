@@ -1,0 +1,15 @@
+{
+  "pages_expected": 9,
+  "pages_200": 9,
+  "http_requests_checked": 221,
+  "failures": [],
+  "known_noncritical": [
+    {
+      "url": "http://127.0.0.1:8765/favicon.ico",
+      "status": 404,
+      "kind": "link@href",
+      "source": "index.htm",
+      "known_noncritical": true
+    }
+  ]
+}
