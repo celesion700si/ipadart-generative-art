@@ -14,7 +14,7 @@ permissions:
 jobs:
   rescue:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - name: Checkout rescue branch
         uses: actions/checkout@v4
@@ -25,11 +25,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wget curl dnsutils
+          python3 -m pip install --disable-pip-version-check requests beautifulsoup4
 
       - name: Capture service metadata
         shell: bash
         run: |
-          set -o pipefail
           rm -rf rescue
           mkdir -p rescue/raw rescue/portable rescue/metadata
           date -u +"%Y-%m-%dT%H:%M:%SZ" > rescue/metadata/rescue_utc.txt
@@ -38,53 +38,231 @@ jobs:
           dig cyber2019.rfjh.ntpc.edu.tw CNAME +noall +answer | tee rescue/metadata/dns_CNAME.txt || true
           curl -sSIL --max-time 30 https://cyber2019.rfjh.ntpc.edu.tw/index.htm | tee rescue/metadata/http_headers.txt || true
 
-      - name: Mirror original public site bytes
+      - name: Crawl and preserve public site
         shell: bash
         run: |
-          set -o pipefail
-          wget \
-            --mirror \
-            --page-requisites \
-            --no-parent \
-            --execute robots=off \
-            --domains cyber2019.rfjh.ntpc.edu.tw \
-            --directory-prefix rescue/raw \
-            --timeout=30 \
-            --tries=3 \
-            --waitretry=2 \
-            --user-agent="CyberFair2019-Preservation/1.0" \
-            https://cyber2019.rfjh.ntpc.edu.tw/index.htm \
-            2>&1 | tee rescue/metadata/wget_raw.log
+          python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import json
+          import os
+          import re
+          import shutil
+          from collections import deque
+          from pathlib import Path, PurePosixPath
+          from urllib.parse import urljoin, urlsplit, urlunsplit, unquote
 
-      - name: Create portable converted mirror
+          import requests
+          from bs4 import BeautifulSoup
+
+          HOST = "cyber2019.rfjh.ntpc.edu.tw"
+          BASE = f"https://{HOST}/"
+          RAW = Path("rescue/raw")
+          META = Path("rescue/metadata")
+          RAW.mkdir(parents=True, exist_ok=True)
+          META.mkdir(parents=True, exist_ok=True)
+
+          seeds = [
+              "index.htm",
+              "yellow.htm",
+              "green.htm",
+              "math.htm",
+              "long.htm",
+              "story.htm",
+              "working.htm",
+              "project.htm",
+              "reference.htm",
+          ]
+
+          session = requests.Session()
+          session.headers.update({"User-Agent": "CyberFair2019-Preservation/2.0"})
+
+          q = deque(urljoin(BASE, s) for s in seeds)
+          seen = set()
+          manifest = []
+          errors = []
+          discovered_from = {}
+          max_urls = 20000
+
+          textish_ext = {
+              ".htm", ".html", ".shtml", ".css", ".js", ".json", ".xml", ".svg",
+              ".txt", ".md", ".csv", ".map"
+          }
+          common_asset_ext = {
+              ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".ico", ".svg",
+              ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".mp4", ".m4v", ".mov", ".webm",
+              ".pdf", ".zip", ".rar", ".7z", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
+              ".ttf", ".otf", ".woff", ".woff2", ".eot", ".swf"
+          }
+
+          def canonical(url: str, parent: str | None = None) -> str | None:
+              if parent:
+                  url = urljoin(parent, url)
+              url = url.strip().replace("&amp;", "&")
+              if not url or url.startswith(("#", "mailto:", "tel:", "javascript:", "data:")):
+                  return None
+              p = urlsplit(url)
+              if p.scheme not in ("http", "https", ""):
+                  return None
+              if p.netloc and p.netloc.lower() != HOST:
+                  return None
+              scheme = p.scheme or "https"
+              netloc = p.netloc or HOST
+              return urlunsplit((scheme, netloc, p.path or "/", p.query, ""))
+
+          def local_path(url: str) -> Path:
+              p = urlsplit(url)
+              raw_path = unquote(p.path)
+              posix = PurePosixPath(raw_path.lstrip("/"))
+              safe_parts = [x for x in posix.parts if x not in ("", ".", "..")]
+              path = Path(*safe_parts) if safe_parts else Path("index.html")
+              if raw_path.endswith("/"):
+                  path = path / "index.html"
+              if p.query:
+                  h = hashlib.sha256(p.query.encode("utf-8", "replace")).hexdigest()[:12]
+                  if path.suffix:
+                      path = path.with_name(f"{path.stem}__q_{h}{path.suffix}")
+                  else:
+                      path = path.with_name(f"{path.name}__q_{h}")
+              return RAW / HOST / path
+
+          def add_link(candidate: str, parent: str):
+              u = canonical(candidate, parent)
+              if u and u not in seen:
+                  if u not in discovered_from:
+                      discovered_from[u] = parent
+                  q.append(u)
+
+          def parse_css(text: str, parent: str):
+              for m in re.finditer(r"url\(\s*(['\"]?)(.*?)\1\s*\)", text, flags=re.I):
+                  add_link(m.group(2), parent)
+              for m in re.finditer(r"@import\s+(?:url\()?\s*['\"]([^'\"]+)['\"]", text, flags=re.I):
+                  add_link(m.group(1), parent)
+
+          def parse_html(text: str, parent: str):
+              soup = BeautifulSoup(text, "html.parser")
+              attrs = ("href", "src", "action", "poster", "data", "background")
+              for tag in soup.find_all(True):
+                  for attr in attrs:
+                      v = tag.get(attr)
+                      if isinstance(v, str):
+                          add_link(v, parent)
+                  srcset = tag.get("srcset")
+                  if isinstance(srcset, str):
+                      for item in srcset.split(","):
+                          add_link(item.strip().split()[0], parent)
+                  style = tag.get("style")
+                  if isinstance(style, str):
+                      parse_css(style, parent)
+              for style_tag in soup.find_all("style"):
+                  parse_css(style_tag.get_text(" ", strip=False), parent)
+
+              # Old hand-authored sites sometimes keep file references in scripts or inline JS.
+              # Restrict this fallback to common local web/media extensions.
+              ext_pattern = "|".join(re.escape(x.lstrip(".")) for x in sorted(textish_ext | common_asset_ext))
+              pat = re.compile(r"(?P<q>['\"])(?P<u>[^'\"<>\s]+\.(?:" + ext_pattern + r")(?:\?[^'\"<>\s]*)?)(?P=q)", re.I)
+              for m in pat.finditer(text):
+                  add_link(m.group("u"), parent)
+
+          while q and len(seen) < max_urls:
+              url = q.popleft()
+              url = canonical(url)
+              if not url or url in seen:
+                  continue
+              seen.add(url)
+              try:
+                  r = session.get(url, timeout=30, allow_redirects=True)
+                  status = r.status_code
+                  ctype = (r.headers.get("content-type") or "").lower()
+                  final = canonical(r.url)
+                  if status != 200:
+                      errors.append({"url": url, "status": status, "reason": r.reason, "from": discovered_from.get(url)})
+                      manifest.append({"url": url, "status": status, "content_type": ctype, "bytes": len(r.content), "saved": None})
+                      continue
+                  if final and final != url and final not in seen:
+                      q.appendleft(final)
+
+                  out = local_path(url)
+                  out.parent.mkdir(parents=True, exist_ok=True)
+                  out.write_bytes(r.content)
+                  rel = out.relative_to(RAW).as_posix()
+                  digest = hashlib.sha256(r.content).hexdigest()
+                  manifest.append({
+                      "url": url,
+                      "final_url": r.url,
+                      "status": status,
+                      "content_type": ctype,
+                      "bytes": len(r.content),
+                      "sha256": digest,
+                      "saved": rel,
+                      "from": discovered_from.get(url),
+                  })
+
+                  suffix = Path(urlsplit(url).path).suffix.lower()
+                  is_text = ctype.startswith("text/") or any(x in ctype for x in ("javascript", "json", "xml", "svg")) or suffix in textish_ext
+                  if is_text:
+                      enc = r.encoding or "utf-8"
+                      try:
+                          text = r.content.decode(enc, errors="replace")
+                      except LookupError:
+                          text = r.content.decode("utf-8", errors="replace")
+                      if "html" in ctype or suffix in {".htm", ".html", ".shtml", ""}:
+                          parse_html(text, url)
+                      elif "css" in ctype or suffix == ".css":
+                          parse_css(text, url)
+              except Exception as e:
+                  errors.append({"url": url, "status": None, "reason": repr(e), "from": discovered_from.get(url)})
+
+          (META / "CRAWL_MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+          (META / "CRAWL_ERRORS.json").write_text(json.dumps(errors, ensure_ascii=False, indent=2), encoding="utf-8")
+          (META / "CRAWL_SUMMARY.txt").write_text(
+              f"visited_urls={len(seen)}\n"
+              f"saved_200={sum(1 for x in manifest if x.get('status') == 200)}\n"
+              f"errors={len(errors)}\n"
+              f"queue_remaining={len(q)}\n",
+              encoding="utf-8"
+          )
+          print((META / "CRAWL_SUMMARY.txt").read_text())
+          PY
+
+      - name: Secondary wget recovery pass
         shell: bash
         run: |
-          set -o pipefail
-          wget \
-            --mirror \
-            --page-requisites \
-            --convert-links \
-            --adjust-extension \
-            --no-parent \
-            --execute robots=off \
-            --domains cyber2019.rfjh.ntpc.edu.tw \
-            --directory-prefix rescue/portable \
-            --timeout=30 \
-            --tries=3 \
-            --waitretry=2 \
-            --user-agent="CyberFair2019-Preservation/1.0" \
-            https://cyber2019.rfjh.ntpc.edu.tw/index.htm \
-            2>&1 | tee rescue/metadata/wget_portable.log
+          set +e
+          mkdir -p rescue/wget-fallback
+          : > rescue/metadata/wget_fallback.log
+          for page in index.htm yellow.htm green.htm math.htm long.htm story.htm working.htm project.htm reference.htm; do
+            echo "===== $page =====" | tee -a rescue/metadata/wget_fallback.log
+            wget \
+              --recursive \
+              --level=inf \
+              --page-requisites \
+              --execute robots=off \
+              --domains cyber2019.rfjh.ntpc.edu.tw \
+              --directory-prefix rescue/wget-fallback \
+              --timeout=30 \
+              --tries=2 \
+              --waitretry=1 \
+              --user-agent="CyberFair2019-Preservation/2.0-wget" \
+              "https://cyber2019.rfjh.ntpc.edu.tw/$page" \
+              2>&1 | tee -a rescue/metadata/wget_fallback.log
+            echo "wget_exit=${PIPESTATUS[0]}" | tee -a rescue/metadata/wget_fallback.log
+          done
+          set -e
 
-      - name: Build preservation inventories and checksums
+      - name: Build portable copy and preservation inventories
         shell: bash
         run: |
           set -e
+          rm -rf rescue/portable
+          cp -a rescue/raw rescue/portable
           find rescue/raw -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/RAW_FILE_INVENTORY.tsv
           find rescue/portable -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/PORTABLE_FILE_INVENTORY.tsv
-          (cd rescue/raw && find . -type f -print0 | sort -z | xargs -0 sha256sum) > rescue/metadata/RAW_SHA256SUMS.txt
-          (cd rescue/portable && find . -type f -print0 | sort -z | xargs -0 sha256sum) > rescue/metadata/PORTABLE_SHA256SUMS.txt
-          du -sh rescue/raw rescue/portable | tee rescue/metadata/SIZES.txt
+          find rescue/wget-fallback -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/WGET_FALLBACK_FILE_INVENTORY.tsv || true
+          (cd rescue/raw && find . -type f -print0 | sort -z | xargs -0 -r sha256sum) > rescue/metadata/RAW_SHA256SUMS.txt
+          (cd rescue/portable && find . -type f -print0 | sort -z | xargs -0 -r sha256sum) > rescue/metadata/PORTABLE_SHA256SUMS.txt
+          du -sh rescue/raw rescue/portable rescue/wget-fallback | tee rescue/metadata/SIZES.txt
+          grep -Ei 'ERROR|failed|404 Not Found|403 Forbidden|Connection refused|Unable to establish' rescue/metadata/wget_fallback.log > rescue/metadata/WGET_SUSPECT_LINES.txt || true
 
       - name: Split files too large for normal Git storage
         shell: bash
@@ -94,7 +272,7 @@ jobs:
           limit = 85 * 1024 * 1024
           part = 80 * 1024 * 1024
           records = []
-          for root in [Path('rescue/raw'), Path('rescue/portable')]:
+          for root in [Path('rescue/raw'), Path('rescue/portable'), Path('rescue/wget-fallback')]:
               for p in sorted(root.rglob('*')):
                   if not p.is_file() or p.stat().st_size <= limit:
                       continue
@@ -125,13 +303,14 @@ jobs:
 
           Source: https://cyber2019.rfjh.ntpc.edu.tw/index.htm
 
-          This branch is an emergency preservation snapshot of the public 2019 International CyberFair site before the school DNS record is retired.
+          Emergency preservation snapshot of the public 2019 International CyberFair site before the school DNS record is retired.
 
-          - `raw/` preserves the recursively downloaded public files without link conversion.
-          - `portable/` is a second mirror with local link conversion for offline/static-host testing.
-          - `metadata/` contains DNS/HTTP capture, wget logs, file inventories, SHA-256 checksums, sizes, and large-file reconstruction instructions.
+          - `raw/` is the primary preservation crawl, keeping downloaded response bytes intact.
+          - `portable/` is currently a byte-identical working copy reserved for link-rewrite/offline validation after the rescue is secured.
+          - `wget-fallback/` is an independent secondary recovery pass seeded from known core pages.
+          - `metadata/` contains DNS/HTTP capture, crawl manifest/errors, file inventories, SHA-256 checksums, sizes, and recovery logs.
 
-          The archive is preservation-first. No editorial redesign or content modernization has been applied.
+          Preservation first: no editorial redesign or modernization has been applied.
           EOF
 
       - name: Upload immutable rescue artifact
