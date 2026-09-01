@@ -14,73 +14,21 @@
   ],
   "css_files": 5,
   "js_files": 8,
-  "local_references_ok": 313,
-  "local_references_missing": 10,
-  "external_reference_occurrences": 15,
-  "external_unique_urls": 7,
-  "missing": [
+  "required_local_references_resolved": 319,
+  "required_local_references_missing": 1,
+  "external_navigational_links": 9,
+  "external_runtime_dependencies": 0,
+  "js_library_advisories": 9,
+  "missing_required": [
     {
       "source": "index.htm",
       "kind": "html:link@href",
       "reference": "../../../../favicon.ico",
+      "resolved": "https://cyber2019.rfjh.ntpc.edu.tw/favicon.ico",
       "resolved_path": "favicon.ico"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.eot?v=4.5.5",
-      "resolved_path": "fonts/ionicons.eot"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.eot?v=4.5.5#iefix",
-      "resolved_path": "fonts/ionicons.eot"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.woff2?v=4.5.5",
-      "resolved_path": "fonts/ionicons.woff2"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.woff?v=4.5.5",
-      "resolved_path": "fonts/ionicons.woff"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.ttf?v=4.5.5",
-      "resolved_path": "fonts/ionicons.ttf"
-    },
-    {
-      "source": "css/ionicons.min.css",
-      "kind": "css:url",
-      "reference": "../fonts/ionicons.svg?v=4.5.5#Ionicons",
-      "resolved_path": "fonts/ionicons.svg"
-    },
-    {
-      "source": "js/bootstrap.min.js",
-      "kind": "js:quoted-static-ref",
-      "reference": "popper.js",
-      "resolved_path": "js/popper.js"
-    },
-    {
-      "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
-      "reference": "default.jpg",
-      "resolved_path": "js/default.jpg"
-    },
-    {
-      "source": "js/vendor/holder.min.js",
-      "kind": "js:quoted-static-ref",
-      "reference": "holder.js",
-      "resolved_path": "js/vendor/holder.js"
     }
   ],
-  "external": [
+  "external_links": [
     {
       "source": "green.htm",
       "kind": "html:a@href",
@@ -88,40 +36,109 @@
       "resolved": "http://www.globalschoolnet.org/gsncf/"
     },
     {
+      "source": "index.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "long.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "math.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "narrative.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "rain.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "references.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "working.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "yellow.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    }
+  ],
+  "external_dependencies": [],
+  "js_advisory": [
+    {
+      "source": "js/bootstrap.min.js",
+      "reference": "popper.js",
+      "resolved": "https://cyber2019.rfjh.ntpc.edu.tw/js/popper.js",
+      "classification": "unresolved-js-library-string"
+    },
+    {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
       "reference": "https://cdn.plyr.io/3.4.8/plyr.svg",
-      "resolved": "https://cdn.plyr.io/3.4.8/plyr.svg"
+      "resolved": "https://cdn.plyr.io/3.4.8/plyr.svg",
+      "classification": "external-js-library-string"
     },
     {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
       "reference": "https://cdn.plyr.io/static/blank.mp4",
-      "resolved": "https://cdn.plyr.io/static/blank.mp4"
+      "resolved": "https://cdn.plyr.io/static/blank.mp4",
+      "classification": "external-js-library-string"
     },
     {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
       "reference": "https://player.vimeo.com/api/player.js",
-      "resolved": "https://player.vimeo.com/api/player.js"
+      "resolved": "https://player.vimeo.com/api/player.js",
+      "classification": "external-js-library-string"
     },
     {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
       "reference": "https://imasdk.googleapis.com/js/sdkloader/ima3.js",
-      "resolved": "https://imasdk.googleapis.com/js/sdkloader/ima3.js"
+      "resolved": "https://imasdk.googleapis.com/js/sdkloader/ima3.js",
+      "classification": "external-js-library-string"
     },
     {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
+      "reference": "default.jpg",
+      "resolved": "https://cyber2019.rfjh.ntpc.edu.tw/js/default.jpg",
+      "classification": "unresolved-js-library-string"
+    },
+    {
+      "source": "js/plyr.js",
       "reference": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.mp4",
-      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.mp4"
+      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.mp4",
+      "classification": "external-js-library-string"
     },
     {
       "source": "js/plyr.js",
-      "kind": "js:quoted-static-ref",
       "reference": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg",
-      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg"
+      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg",
+      "classification": "external-js-library-string"
+    },
+    {
+      "source": "js/vendor/holder.min.js",
+      "reference": "holder.js",
+      "resolved": "https://cyber2019.rfjh.ntpc.edu.tw/js/vendor/holder.js",
+      "classification": "unresolved-js-library-string"
     }
   ]
 }
