@@ -1,0 +1,89 @@
+name: Prepare Formal CyberFair 2019 Move
+
+on:
+  push:
+    branches:
+      - rescue-cyber2019-archive
+    paths:
+      - .github/workflows/cyber2019-formal-move.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout preservation source
+        uses: actions/checkout@v4
+        with:
+          ref: rescue-cyber2019-archive
+          path: preservation
+          fetch-depth: 0
+
+      - name: Checkout production main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production
+          fetch-depth: 0
+
+      - name: Build production cyber2019 directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE/preservation/rescue/portable/cyber2019.rfjh.ntpc.edu.tw"
+          DST="$GITHUB_WORKSPACE/production/cyber2019"
+          test -f "$SRC/index.htm"
+          rm -rf "$DST"
+          mkdir -p "$DST"
+          cp -a "$SRC"/. "$DST"/
+          # GitHub Pages directory entry requires index.html; retain index.htm for historical fidelity.
+          cp "$DST/index.htm" "$DST/index.html"
+          cat > "$DST/MIGRATION_RECORD.md" <<'EOF'
+          # CyberFair 2019 Migration Record
+
+          - Original host: `cyber2019.rfjh.ntpc.edu.tw`
+          - Preservation date: 2026-09-01 (Asia/Taipei)
+          - Production path: `/cyber2019/`
+          - Preservation principle: original rescue archive remains immutable on `rescue-cyber2019-archive`; this directory is the portable production derivative.
+          - Verified source archive: 117 files, 9 HTML pages, 319 required local references resolved, 0 HTML/CSS external runtime dependencies.
+          - Known noncritical historical issue: missing favicon reference in original `index.htm`.
+          EOF
+
+      - name: Production smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/production"
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/cyber2019-production-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8765/cyber2019/ >/dev/null && break
+            sleep 0.5
+          done
+          pages=(index.html index.htm green.htm long.htm math.htm narrative.htm rain.htm references.htm working.htm yellow.htm)
+          for page in "${pages[@]}"; do
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' "http://127.0.0.1:8765/cyber2019/$page")
+            test "$code" = "200" || { echo "$page => $code"; exit 1; }
+          done
+          echo "Production directory smoke test passed: 10 entry/page URLs returned 200."
+
+      - name: Prepare release branch
+        shell: bash
+        working-directory: production
+        run: |
+          set -euo pipefail
+          git config user.name "CyberFair Preservation Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -B cyber2019-formal-move
+          git add cyber2019
+          if git diff --cached --quiet; then
+            echo "No production changes to commit."
+          else
+            git commit -m "Publish preserved CyberFair 2019 site under /cyber2019"
+          fi
+          git push origin HEAD:cyber2019-formal-move --force
