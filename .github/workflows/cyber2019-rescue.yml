@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: rescue-cyber2019-archive
+          fetch-depth: 0
 
       - name: Install preservation tools
         run: |
@@ -31,7 +32,7 @@ jobs:
         shell: bash
         run: |
           rm -rf rescue
-          mkdir -p rescue/raw rescue/portable rescue/metadata
+          mkdir -p rescue/raw rescue/portable rescue/metadata rescue/wget-fallback
           date -u +"%Y-%m-%dT%H:%M:%SZ" > rescue/metadata/rescue_utc.txt
           dig cyber2019.rfjh.ntpc.edu.tw A +noall +answer | tee rescue/metadata/dns_A.txt || true
           dig cyber2019.rfjh.ntpc.edu.tw AAAA +noall +answer | tee rescue/metadata/dns_AAAA.txt || true
@@ -43,15 +44,10 @@ jobs:
         run: |
           python3 - <<'PY'
           from __future__ import annotations
-          import hashlib
-          import json
-          import os
-          import re
-          import shutil
+          import hashlib, json, re
           from collections import deque
           from pathlib import Path, PurePosixPath
           from urllib.parse import urljoin, urlsplit, urlunsplit, unquote
-
           import requests
           from bs4 import BeautifulSoup
 
@@ -63,194 +59,132 @@ jobs:
           META.mkdir(parents=True, exist_ok=True)
 
           seeds = [
-              "index.htm",
-              "yellow.htm",
-              "green.htm",
-              "math.htm",
-              "long.htm",
-              "story.htm",
-              "working.htm",
-              "project.htm",
-              "reference.htm",
+              "index.htm", "yellow.htm", "green.htm", "math.htm", "long.htm",
+              "story.htm", "working.htm", "project.htm", "reference.htm"
           ]
-
           session = requests.Session()
-          session.headers.update({"User-Agent": "CyberFair2019-Preservation/2.0"})
-
+          session.headers.update({"User-Agent": "CyberFair2019-Preservation/3.0"})
           q = deque(urljoin(BASE, s) for s in seeds)
-          seen = set()
-          manifest = []
-          errors = []
+          seen, queued = set(), set(q)
+          manifest, errors = [], []
           discovered_from = {}
-          max_urls = 20000
-
-          textish_ext = {
-              ".htm", ".html", ".shtml", ".css", ".js", ".json", ".xml", ".svg",
-              ".txt", ".md", ".csv", ".map"
-          }
-          common_asset_ext = {
+          max_urls = 25000
+          text_ext = {".htm", ".html", ".shtml", ".css", ".js", ".json", ".xml", ".svg", ".txt", ".md", ".csv", ".map"}
+          asset_ext = {
               ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".ico", ".svg",
               ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".mp4", ".m4v", ".mov", ".webm",
               ".pdf", ".zip", ".rar", ".7z", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
               ".ttf", ".otf", ".woff", ".woff2", ".eot", ".swf"
           }
 
-          def canonical(url: str, parent: str | None = None) -> str | None:
-              if parent:
-                  url = urljoin(parent, url)
+          def canonical(url, parent=None):
+              if not isinstance(url, str): return None
+              if parent: url = urljoin(parent, url)
               url = url.strip().replace("&amp;", "&")
-              if not url or url.startswith(("#", "mailto:", "tel:", "javascript:", "data:")):
-                  return None
+              if not url or url.startswith(("#", "mailto:", "tel:", "javascript:", "data:")): return None
               p = urlsplit(url)
-              if p.scheme not in ("http", "https", ""):
-                  return None
-              if p.netloc and p.netloc.lower() != HOST:
-                  return None
-              scheme = p.scheme or "https"
-              netloc = p.netloc or HOST
-              return urlunsplit((scheme, netloc, p.path or "/", p.query, ""))
+              if p.scheme not in ("http", "https", ""): return None
+              if p.netloc and p.netloc.lower() != HOST: return None
+              return urlunsplit((p.scheme or "https", p.netloc or HOST, p.path or "/", p.query, ""))
 
-          def local_path(url: str) -> Path:
+          def local_path(url):
               p = urlsplit(url)
               raw_path = unquote(p.path)
               posix = PurePosixPath(raw_path.lstrip("/"))
-              safe_parts = [x for x in posix.parts if x not in ("", ".", "..")]
-              path = Path(*safe_parts) if safe_parts else Path("index.html")
-              if raw_path.endswith("/"):
-                  path = path / "index.html"
+              parts = [x for x in posix.parts if x not in ("", ".", "..")]
+              path = Path(*parts) if parts else Path("index.html")
+              if raw_path.endswith("/"): path = path / "index.html"
               if p.query:
                   h = hashlib.sha256(p.query.encode("utf-8", "replace")).hexdigest()[:12]
-                  if path.suffix:
-                      path = path.with_name(f"{path.stem}__q_{h}{path.suffix}")
-                  else:
-                      path = path.with_name(f"{path.name}__q_{h}")
+                  path = path.with_name(f"{path.stem}__q_{h}{path.suffix}") if path.suffix else path.with_name(f"{path.name}__q_{h}")
               return RAW / HOST / path
 
-          def add_link(candidate: str, parent: str):
+          def add(candidate, parent):
               u = canonical(candidate, parent)
-              if u and u not in seen:
-                  if u not in discovered_from:
-                      discovered_from[u] = parent
-                  q.append(u)
+              if u and u not in seen and u not in queued:
+                  queued.add(u); discovered_from[u] = parent; q.append(u)
 
-          def parse_css(text: str, parent: str):
-              for m in re.finditer(r"url\(\s*(['\"]?)(.*?)\1\s*\)", text, flags=re.I):
-                  add_link(m.group(2), parent)
-              for m in re.finditer(r"@import\s+(?:url\()?\s*['\"]([^'\"]+)['\"]", text, flags=re.I):
-                  add_link(m.group(1), parent)
+          def parse_css(text, parent):
+              for m in re.finditer(r"url\(\s*(['\"]?)(.*?)\1\s*\)", text, re.I): add(m.group(2), parent)
+              for m in re.finditer(r"@import\s+(?:url\()?\s*['\"]([^'\"]+)['\"]", text, re.I): add(m.group(1), parent)
 
-          def parse_html(text: str, parent: str):
+          def parse_html(text, parent):
               soup = BeautifulSoup(text, "html.parser")
-              attrs = ("href", "src", "action", "poster", "data", "background")
               for tag in soup.find_all(True):
-                  for attr in attrs:
-                      v = tag.get(attr)
-                      if isinstance(v, str):
-                          add_link(v, parent)
+                  for attr in ("href", "src", "action", "poster", "data", "background"):
+                      add(tag.get(attr), parent)
                   srcset = tag.get("srcset")
                   if isinstance(srcset, str):
-                      for item in srcset.split(","):
-                          add_link(item.strip().split()[0], parent)
+                      for item in srcset.split(","): add(item.strip().split()[0], parent)
                   style = tag.get("style")
-                  if isinstance(style, str):
-                      parse_css(style, parent)
-              for style_tag in soup.find_all("style"):
-                  parse_css(style_tag.get_text(" ", strip=False), parent)
-
-              # Old hand-authored sites sometimes keep file references in scripts or inline JS.
-              # Restrict this fallback to common local web/media extensions.
-              ext_pattern = "|".join(re.escape(x.lstrip(".")) for x in sorted(textish_ext | common_asset_ext))
-              pat = re.compile(r"(?P<q>['\"])(?P<u>[^'\"<>\s]+\.(?:" + ext_pattern + r")(?:\?[^'\"<>\s]*)?)(?P=q)", re.I)
-              for m in pat.finditer(text):
-                  add_link(m.group("u"), parent)
+                  if isinstance(style, str): parse_css(style, parent)
+              for st in soup.find_all("style"): parse_css(st.get_text(" ", strip=False), parent)
+              exts = "|".join(re.escape(x.lstrip(".")) for x in sorted(text_ext | asset_ext))
+              pat = re.compile(r"(?P<q>['\"])(?P<u>[^'\"<>\s]+\.(?:" + exts + r")(?:\?[^'\"<>\s]*)?)(?P=q)", re.I)
+              for m in pat.finditer(text): add(m.group("u"), parent)
 
           while q and len(seen) < max_urls:
-              url = q.popleft()
-              url = canonical(url)
-              if not url or url in seen:
-                  continue
+              url = canonical(q.popleft())
+              if not url or url in seen: continue
               seen.add(url)
               try:
                   r = session.get(url, timeout=30, allow_redirects=True)
-                  status = r.status_code
                   ctype = (r.headers.get("content-type") or "").lower()
-                  final = canonical(r.url)
-                  if status != 200:
-                      errors.append({"url": url, "status": status, "reason": r.reason, "from": discovered_from.get(url)})
-                      manifest.append({"url": url, "status": status, "content_type": ctype, "bytes": len(r.content), "saved": None})
+                  if r.status_code != 200:
+                      errors.append({"url": url, "status": r.status_code, "reason": r.reason, "from": discovered_from.get(url)})
+                      manifest.append({"url": url, "status": r.status_code, "bytes": len(r.content), "content_type": ctype, "saved": None})
                       continue
-                  if final and final != url and final not in seen:
-                      q.appendleft(final)
-
                   out = local_path(url)
                   out.parent.mkdir(parents=True, exist_ok=True)
                   out.write_bytes(r.content)
-                  rel = out.relative_to(RAW).as_posix()
-                  digest = hashlib.sha256(r.content).hexdigest()
-                  manifest.append({
-                      "url": url,
-                      "final_url": r.url,
-                      "status": status,
-                      "content_type": ctype,
-                      "bytes": len(r.content),
-                      "sha256": digest,
-                      "saved": rel,
-                      "from": discovered_from.get(url),
-                  })
-
                   suffix = Path(urlsplit(url).path).suffix.lower()
-                  is_text = ctype.startswith("text/") or any(x in ctype for x in ("javascript", "json", "xml", "svg")) or suffix in textish_ext
+                  manifest.append({
+                      "url": url, "final_url": r.url, "status": r.status_code,
+                      "content_type": ctype, "bytes": len(r.content),
+                      "sha256": hashlib.sha256(r.content).hexdigest(),
+                      "saved": out.relative_to(RAW).as_posix(), "from": discovered_from.get(url)
+                  })
+                  is_text = ctype.startswith("text/") or any(x in ctype for x in ("javascript", "json", "xml", "svg")) or suffix in text_ext
                   if is_text:
                       enc = r.encoding or "utf-8"
-                      try:
-                          text = r.content.decode(enc, errors="replace")
-                      except LookupError:
-                          text = r.content.decode("utf-8", errors="replace")
-                      if "html" in ctype or suffix in {".htm", ".html", ".shtml", ""}:
-                          parse_html(text, url)
-                      elif "css" in ctype or suffix == ".css":
-                          parse_css(text, url)
+                      try: text = r.content.decode(enc, errors="replace")
+                      except LookupError: text = r.content.decode("utf-8", errors="replace")
+                      if "html" in ctype or suffix in {".htm", ".html", ".shtml", ""}: parse_html(text, url)
+                      elif "css" in ctype or suffix == ".css": parse_css(text, url)
               except Exception as e:
                   errors.append({"url": url, "status": None, "reason": repr(e), "from": discovered_from.get(url)})
 
-          (META / "CRAWL_MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-          (META / "CRAWL_ERRORS.json").write_text(json.dumps(errors, ensure_ascii=False, indent=2), encoding="utf-8")
-          (META / "CRAWL_SUMMARY.txt").write_text(
+          (META/"CRAWL_MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+          (META/"CRAWL_ERRORS.json").write_text(json.dumps(errors, ensure_ascii=False, indent=2), encoding="utf-8")
+          summary = (
               f"visited_urls={len(seen)}\n"
               f"saved_200={sum(1 for x in manifest if x.get('status') == 200)}\n"
               f"errors={len(errors)}\n"
-              f"queue_remaining={len(q)}\n",
-              encoding="utf-8"
+              f"queue_remaining={len(q)}\n"
           )
-          print((META / "CRAWL_SUMMARY.txt").read_text())
+          (META/"CRAWL_SUMMARY.txt").write_text(summary, encoding="utf-8")
+          print(summary)
           PY
 
       - name: Secondary wget recovery pass
         shell: bash
         run: |
           set +e
-          mkdir -p rescue/wget-fallback
           : > rescue/metadata/wget_fallback.log
           for page in index.htm yellow.htm green.htm math.htm long.htm story.htm working.htm project.htm reference.htm; do
             echo "===== $page =====" | tee -a rescue/metadata/wget_fallback.log
-            wget \
-              --recursive \
-              --level=inf \
-              --page-requisites \
-              --execute robots=off \
+            wget --recursive --level=inf --page-requisites --execute robots=off \
               --domains cyber2019.rfjh.ntpc.edu.tw \
               --directory-prefix rescue/wget-fallback \
-              --timeout=30 \
-              --tries=2 \
-              --waitretry=1 \
-              --user-agent="CyberFair2019-Preservation/2.0-wget" \
+              --timeout=30 --tries=2 --waitretry=1 \
+              --user-agent="CyberFair2019-Preservation/3.0-wget" \
               "https://cyber2019.rfjh.ntpc.edu.tw/$page" \
               2>&1 | tee -a rescue/metadata/wget_fallback.log
             echo "wget_exit=${PIPESTATUS[0]}" | tee -a rescue/metadata/wget_fallback.log
           done
           set -e
 
-      - name: Build portable copy and preservation inventories
+      - name: Build preservation inventories and checksums
         shell: bash
         run: |
           set -e
@@ -269,30 +203,21 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          limit = 85 * 1024 * 1024
-          part = 80 * 1024 * 1024
+          limit, part = 85*1024*1024, 80*1024*1024
           records = []
           for root in [Path('rescue/raw'), Path('rescue/portable'), Path('rescue/wget-fallback')]:
               for p in sorted(root.rglob('*')):
-                  if not p.is_file() or p.stat().st_size <= limit:
-                      continue
-                  size = p.stat().st_size
-                  base = p.with_name(p.name + '.split')
+                  if not p.is_file() or p.stat().st_size <= limit: continue
+                  size, i = p.stat().st_size, 0
                   with p.open('rb') as src:
-                      i = 0
                       while True:
                           data = src.read(part)
-                          if not data:
-                              break
-                          out = Path(f'{base}.{i:03d}')
-                          out.write_bytes(data)
-                          i += 1
+                          if not data: break
+                          Path(f'{p}.split.{i:03d}').write_bytes(data); i += 1
                   records.append(f'{p}\t{size}\t{i} parts\tcat {p.name}.split.* > {p.name}')
                   p.unlink()
           Path('rescue/metadata/LARGE_FILE_RECONSTRUCTION.tsv').write_text(
-              'original_path\toriginal_size\tparts\treconstruction\n' + '\n'.join(records) + ('\n' if records else ''),
-              encoding='utf-8'
-          )
+              'original_path\toriginal_size\tparts\treconstruction\n' + '\n'.join(records) + ('\n' if records else ''), encoding='utf-8')
           PY
 
       - name: Record rescue README
@@ -306,21 +231,12 @@ jobs:
           Emergency preservation snapshot of the public 2019 International CyberFair site before the school DNS record is retired.
 
           - `raw/` is the primary preservation crawl, keeping downloaded response bytes intact.
-          - `portable/` is currently a byte-identical working copy reserved for link-rewrite/offline validation after the rescue is secured.
-          - `wget-fallback/` is an independent secondary recovery pass seeded from known core pages.
-          - `metadata/` contains DNS/HTTP capture, crawl manifest/errors, file inventories, SHA-256 checksums, sizes, and recovery logs.
+          - `portable/` is a byte-identical working copy reserved for offline/static-host validation.
+          - `wget-fallback/` is an independent secondary recovery pass seeded from nine known core pages.
+          - `metadata/` contains DNS/HTTP capture, crawl manifest/errors, inventories, SHA-256 checksums, sizes, and recovery logs.
 
           Preservation first: no editorial redesign or modernization has been applied.
           EOF
-
-      - name: Upload immutable rescue artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cyber2019-emergency-preservation
-          path: rescue
-          if-no-files-found: error
-          retention-days: 90
-          compression-level: 6
 
       - name: Commit rescued files to preservation branch
         shell: bash
@@ -335,3 +251,13 @@ jobs:
             git commit -m "Emergency preserve CyberFair 2019 public site"
             git push origin HEAD:rescue-cyber2019-archive
           fi
+
+      - name: Upload convenience rescue artifact
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyber2019-emergency-preservation
+          path: rescue
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
