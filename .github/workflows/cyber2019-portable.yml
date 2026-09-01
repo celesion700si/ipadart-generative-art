@@ -1,0 +1,188 @@
+name: Build Portable CyberFair 2019 Archive
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [rescue-cyber2019-archive]
+    paths: [.github/workflows/cyber2019-portable.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout rescue branch
+        uses: actions/checkout@v4
+        with:
+          ref: rescue-cyber2019-archive
+          fetch-depth: 0
+
+      - name: Install validator
+        run: python3 -m pip install --disable-pip-version-check requests beautifulsoup4
+
+      - name: Rebuild portable copy from immutable raw archive
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, shutil
+          from pathlib import Path
+          from urllib.parse import urlsplit, unquote
+
+          HOST='cyber2019.rfjh.ntpc.edu.tw'
+          RAW=Path('rescue/raw')/HOST
+          PORT=Path('rescue/portable')/HOST
+          META=Path('rescue/metadata')
+          manifest=json.loads((META/'CRAWL_MANIFEST.json').read_text(encoding='utf-8'))
+
+          if PORT.exists(): shutil.rmtree(PORT)
+          shutil.copytree(RAW,PORT)
+          restored=[]; collisions=[]
+
+          for rec in manifest:
+              if rec.get('status')!=200 or not rec.get('saved'): continue
+              u=urlsplit(rec['url'])
+              if not u.query: continue
+              src_rel=Path(rec['saved']).relative_to(HOST)
+              src=PORT/src_rel
+              target_rel=Path(unquote(u.path).lstrip('/'))
+              target=PORT/target_rel
+              if not src.exists():
+                  continue
+              target.parent.mkdir(parents=True,exist_ok=True)
+              if target.exists():
+                  if hashlib.sha256(target.read_bytes()).digest()!=hashlib.sha256(src.read_bytes()).digest():
+                      collisions.append({'source':str(src_rel),'target':str(target_rel),'url':rec['url']})
+                  continue
+              shutil.copy2(src,target)
+              restored.append({'source':str(src_rel),'target':str(target_rel),'url':rec['url']})
+
+          (META/'PORTABLE_QUERY_ASSETS_RESTORED.json').write_text(json.dumps(restored,ensure_ascii=False,indent=2),encoding='utf-8')
+          (META/'PORTABLE_COLLISIONS.json').write_text(json.dumps(collisions,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(f'restored_query_assets={len(restored)}')
+          print(f'collisions={len(collisions)}')
+          if collisions:
+              raise SystemExit('Portable filename collisions detected; review required.')
+          PY
+
+      - name: Smoke-test portable site on local HTTP server
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+          import json, re, subprocess, time
+          from pathlib import Path
+          from urllib.parse import urljoin, urlsplit
+          import requests
+          from bs4 import BeautifulSoup
+
+          HOST='cyber2019.rfjh.ntpc.edu.tw'
+          ROOT=Path('rescue/portable')/HOST
+          META=Path('rescue/metadata')
+          pages=['index.htm','yellow.htm','green.htm','math.htm','long.htm','rain.htm','narrative.htm','working.htm','references.htm']
+          port=8765
+          proc=subprocess.Popen(['python3','-m','http.server',str(port),'--bind','127.0.0.1','--directory',str(ROOT)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+          try:
+              for _ in range(30):
+                  try:
+                      if requests.get(f'http://127.0.0.1:{port}/index.htm',timeout=1).status_code==200: break
+                  except Exception: pass
+                  time.sleep(.2)
+              else: raise RuntimeError('Local HTTP server did not become ready')
+
+              results=[]; required_urls=set()
+              css_url=re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)",re.I)
+
+              def add_local(base,ref,kind,source):
+                  if not isinstance(ref,str):return
+                  ref=ref.strip()
+                  if not ref or ref.startswith(('#','mailto:','tel:','javascript:','data:')):return
+                  full=urljoin(base,ref); u=urlsplit(full)
+                  if u.hostname not in ('127.0.0.1','localhost'):return
+                  required_urls.add((full,kind,source))
+
+              for page in pages:
+                  url=f'http://127.0.0.1:{port}/{page}'
+                  r=requests.get(url,timeout=10)
+                  results.append({'url':url,'status':r.status_code,'bytes':len(r.content),'kind':'page'})
+                  if r.status_code!=200: continue
+                  soup=BeautifulSoup(r.content,'html.parser')
+                  for tag in soup.find_all(True):
+                      for attr in ('href','src','poster','data','background'):
+                          v=tag.get(attr)
+                          # Ordinary anchor destinations are page/navigation checks, except known external links.
+                          if tag.name=='a' and attr=='href':
+                              if isinstance(v,str):
+                                  full=urljoin(url,v); u=urlsplit(full)
+                                  if u.hostname in ('127.0.0.1','localhost'): add_local(url,v,'anchor',page)
+                              continue
+                          add_local(url,v,f'{tag.name}@{attr}',page)
+                      style=tag.get('style')
+                      if isinstance(style,str):
+                          for m in css_url.finditer(style): add_local(url,m.group(2),'inline-style',page)
+
+              # Follow CSS files and validate their url(...) assets as served.
+              css_checked=set()
+              queue=[x for x in required_urls if urlsplit(x[0]).path.lower().endswith('.css')]
+              while queue:
+                  full,kind,source=queue.pop()
+                  if full in css_checked:continue
+                  css_checked.add(full)
+                  r=requests.get(full,timeout=10)
+                  results.append({'url':full,'status':r.status_code,'bytes':len(r.content),'kind':'css','source':source})
+                  if r.status_code!=200:continue
+                  for m in css_url.finditer(r.text): add_local(full,m.group(2),'css-url',urlsplit(full).path)
+
+              already={x['url'] for x in results}
+              for full,kind,source in sorted(required_urls):
+                  if full in already:continue
+                  # The original site references /favicon.ico but the source server itself returns 404; treat separately.
+                  if urlsplit(full).path=='/favicon.ico':
+                      results.append({'url':full,'status':404,'kind':kind,'source':source,'known_noncritical':True})
+                      continue
+                  r=requests.get(full,timeout=15)
+                  results.append({'url':full,'status':r.status_code,'bytes':len(r.content),'kind':kind,'source':source})
+
+              failures=[x for x in results if x['status']!=200 and not x.get('known_noncritical')]
+              report={
+                  'pages_expected':len(pages),
+                  'pages_200':sum(1 for x in results if x.get('kind')=='page' and x['status']==200),
+                  'http_requests_checked':len(results),
+                  'failures':failures,
+                  'known_noncritical':[x for x in results if x.get('known_noncritical')],
+              }
+              (META/'PORTABLE_HTTP_SMOKE_TEST.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+              (META/'PORTABLE_HTTP_SMOKE_TEST.md').write_text(
+                  '# CyberFair 2019 Portable HTTP Smoke Test\n\n'
+                  f"- HTML pages returning 200: **{report['pages_200']}/{report['pages_expected']}**\n"
+                  f"- HTTP resources checked: **{report['http_requests_checked']}**\n"
+                  f"- Unexpected failures: **{len(failures)}**\n"
+                  f"- Known noncritical missing favicon: **{len(report['known_noncritical'])}**\n\n"
+                  + ('## Unexpected failures\n' + '\n'.join(f"- {x['status']} `{x['url']}` ← {x.get('source','')}" for x in failures) + '\n' if failures else '## Unexpected failures\n- None\n'),
+                  encoding='utf-8')
+              print(json.dumps(report,ensure_ascii=False,indent=2))
+              if failures: raise SystemExit(f'{len(failures)} unexpected portable-site HTTP failures')
+          finally:
+              proc.terminate(); proc.wait(timeout=5)
+          PY
+
+      - name: Refresh portable inventory and checksum
+        shell: bash
+        run: |
+          find rescue/portable -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/PORTABLE_FILE_INVENTORY.tsv
+          (cd rescue/portable && find . -type f -print0 | sort -z | xargs -0 -r sha256sum) > rescue/metadata/PORTABLE_SHA256SUMS.txt
+          du -sh rescue/portable | tee rescue/metadata/PORTABLE_SIZE.txt
+
+      - name: Commit portable build and test report
+        shell: bash
+        run: |
+          git config user.name "CyberFair Preservation Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add rescue/portable rescue/metadata/PORTABLE_QUERY_ASSETS_RESTORED.json rescue/metadata/PORTABLE_COLLISIONS.json rescue/metadata/PORTABLE_HTTP_SMOKE_TEST.json rescue/metadata/PORTABLE_HTTP_SMOKE_TEST.md rescue/metadata/PORTABLE_FILE_INVENTORY.tsv rescue/metadata/PORTABLE_SHA256SUMS.txt rescue/metadata/PORTABLE_SIZE.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build and verify portable CyberFair 2019 site'
+            git push origin HEAD:rescue-cyber2019-archive
+          fi
