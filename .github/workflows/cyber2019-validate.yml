@@ -3,10 +3,8 @@ name: Validate CyberFair 2019 Offline Archive
 on:
   workflow_dispatch:
   push:
-    branches:
-      - rescue-cyber2019-archive
-    paths:
-      - .github/workflows/cyber2019-validate.yml
+    branches: [rescue-cyber2019-archive]
+    paths: [.github/workflows/cyber2019-validate.yml]
 
 permissions:
   contents: write
@@ -25,156 +23,159 @@ jobs:
       - name: Install parser
         run: python3 -m pip install --disable-pip-version-check beautifulsoup4
 
-      - name: Validate local references without network
+      - name: Validate archive references without network
         shell: bash
         run: |
           python3 - <<'PY'
           from __future__ import annotations
-          import json, os, re
+          import hashlib, json, re
           from pathlib import Path
           from urllib.parse import urljoin, urlsplit, unquote
           from bs4 import BeautifulSoup
 
-          HOST = 'cyber2019.rfjh.ntpc.edu.tw'
-          ROOT = Path('rescue/raw') / HOST
-          META = Path('rescue/metadata')
-          BASE = f'https://{HOST}/'
+          HOST='cyber2019.rfjh.ntpc.edu.tw'
+          ROOT=Path('rescue/raw')/HOST
+          META=Path('rescue/metadata')
+          BASE=f'https://{HOST}/'
+          files={p.relative_to(ROOT).as_posix():p for p in ROOT.rglob('*') if p.is_file()}
+          htmls=sorted(p for p in ROOT.rglob('*') if p.suffix.lower() in {'.htm','.html','.shtml'})
+          csss=sorted(ROOT.rglob('*.css'))
+          jss=sorted(ROOT.rglob('*.js'))
 
-          files = {p.relative_to(ROOT).as_posix(): p for p in ROOT.rglob('*') if p.is_file()}
-          htmls = sorted([p for p in ROOT.rglob('*') if p.suffix.lower() in {'.htm','.html','.shtml'}])
-          csss = sorted([p for p in ROOT.rglob('*.css')])
-          jss = sorted([p for p in ROOT.rglob('*.js')])
+          ok=[]; missing_required=[]; external_links=[]; external_dependencies=[]; js_advisory=[]
+          seen=set()
 
-          local_ok, missing, external = [], [], []
-          seen_refs = set()
+          def src_url(src): return urljoin(BASE, src.relative_to(ROOT).as_posix())
 
-          def source_url(src: Path):
-              return urljoin(BASE, src.relative_to(ROOT).as_posix())
-
-          def classify(raw, src: Path, kind: str):
-              if not isinstance(raw, str): return
-              raw = raw.strip().replace('&amp;', '&')
-              if not raw or raw.startswith(('#','mailto:','tel:','javascript:','data:')): return
-              key = (src.relative_to(ROOT).as_posix(), kind, raw)
-              if key in seen_refs: return
-              seen_refs.add(key)
-              full = urljoin(source_url(src), raw)
-              u = urlsplit(full)
-              if u.scheme not in ('http','https'):
-                  return
-              if u.netloc.lower() != HOST:
-                  external.append({'source': key[0], 'kind': kind, 'reference': raw, 'resolved': full})
-                  return
-              path = unquote(u.path).lstrip('/')
-              candidates = [path]
+          def saved_candidates(u):
+              path=unquote(u.path).lstrip('/')
+              out=[path]
+              if u.query:
+                  h=hashlib.sha256(u.query.encode('utf-8','replace')).hexdigest()[:12]
+                  p=Path(path)
+                  qname=f'{p.stem}__q_{h}{p.suffix}' if p.suffix else f'{p.name}__q_{h}'
+                  out.append((p.parent/qname).as_posix())
               if not path or path.endswith('/'):
-                  candidates.append(path + 'index.html')
-                  candidates.append(path + 'index.htm')
-              found = next((c for c in candidates if c in files), None)
-              rec = {'source': key[0], 'kind': kind, 'reference': raw, 'resolved_path': path}
-              if found:
-                  rec['found_as'] = found
-                  local_ok.append(rec)
-              else:
-                  missing.append(rec)
+                  out += [path+'index.html', path+'index.htm']
+              return path, out
 
-          css_url_re = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.I)
-          css_import_re = re.compile(r"@import\s+(?:url\()?\s*['\"]([^'\"]+)['\"]", re.I)
+          def classify(raw, src, kind, dependency=True):
+              if not isinstance(raw,str): return
+              raw=raw.strip().replace('&amp;','&')
+              if not raw or raw.startswith(('#','mailto:','tel:','javascript:','data:')): return
+              key=(src.relative_to(ROOT).as_posix(),kind,raw)
+              if key in seen:return
+              seen.add(key)
+              full=urljoin(src_url(src),raw); u=urlsplit(full)
+              if u.scheme not in ('http','https'): return
+              rec={'source':key[0],'kind':kind,'reference':raw,'resolved':full}
+              if u.netloc.lower()!=HOST:
+                  (external_dependencies if dependency else external_links).append(rec); return
+              path,cands=saved_candidates(u)
+              found=next((c for c in cands if c in files),None)
+              rec['resolved_path']=path
+              if found:
+                  rec['found_as']=found; ok.append(rec)
+              else:
+                  missing_required.append(rec)
+
+          css_url=re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)",re.I)
+          css_import=re.compile(r"@import\s+(?:url\()?\s*['\"]([^'\"]+)['\"]",re.I)
 
           for src in htmls:
-              b = src.read_bytes()
-              text = b.decode('utf-8', errors='replace')
-              soup = BeautifulSoup(text, 'html.parser')
+              text=src.read_bytes().decode('utf-8',errors='replace')
+              soup=BeautifulSoup(text,'html.parser')
               for tag in soup.find_all(True):
                   for attr in ('href','src','action','poster','data','background'):
-                      v = tag.get(attr)
-                      if isinstance(v, str): classify(v, src, f'html:{tag.name}@{attr}')
-                  srcset = tag.get('srcset')
-                  if isinstance(srcset, str):
+                      v=tag.get(attr)
+                      if not isinstance(v,str): continue
+                      navigational=(tag.name=='a' and attr=='href')
+                      classify(v,src,f'html:{tag.name}@{attr}',dependency=not navigational)
+                  srcset=tag.get('srcset')
+                  if isinstance(srcset,str):
                       for item in srcset.split(','):
-                          bits = item.strip().split()
-                          if bits: classify(bits[0], src, f'html:{tag.name}@srcset')
-                  style = tag.get('style')
-                  if isinstance(style, str):
-                      for m in css_url_re.finditer(style): classify(m.group(2), src, 'html:inline-style')
+                          bits=item.strip().split()
+                          if bits: classify(bits[0],src,f'html:{tag.name}@srcset',dependency=True)
+                  style=tag.get('style')
+                  if isinstance(style,str):
+                      for m in css_url.finditer(style): classify(m.group(2),src,'html:inline-style',True)
               for st in soup.find_all('style'):
-                  stxt = st.get_text(' ', strip=False)
-                  for m in css_url_re.finditer(stxt): classify(m.group(2), src, 'html:style')
+                  for m in css_url.finditer(st.get_text(' ',strip=False)): classify(m.group(2),src,'html:style',True)
 
           for src in csss:
-              text = src.read_bytes().decode('utf-8', errors='replace')
-              for m in css_url_re.finditer(text): classify(m.group(2), src, 'css:url')
-              for m in css_import_re.finditer(text): classify(m.group(1), src, 'css:import')
+              text=src.read_bytes().decode('utf-8',errors='replace')
+              for m in css_url.finditer(text): classify(m.group(2),src,'css:url',True)
+              for m in css_import.finditer(text): classify(m.group(1),src,'css:import',True)
 
-          # Conservative scan of JS quoted references to static assets/pages only.
-          ext_pat = r'(?:htm|html|css|js|jpg|jpeg|png|gif|svg|mp3|wav|m4a|mp4|m4v|mov|webm|pdf|woff2?|ttf|otf|eot|swf)'
-          qref = re.compile(r"(?P<q>['\"])(?P<u>(?:https?://[^'\"]+|/[^'\"]+|(?:\.\.?/)?[^'\"]+)\." + ext_pat + r"(?:\?[^'\"]*)?)(?P=q)", re.I)
+          # JS library strings are advisory only: they may be demos/fallbacks rather than runtime dependencies.
+          ext_pat=r'(?:htm|html|css|js|jpg|jpeg|png|gif|svg|mp3|wav|m4a|mp4|m4v|mov|webm|pdf|woff2?|ttf|otf|eot|swf)'
+          qref=re.compile(r"(?P<q>['\"])(?P<u>(?:https?://[^'\"]+|/[^'\"]+|(?:\.\.?/)?[^'\"]+)\."+ext_pat+r"(?:\?[^'\"]*)?)(?P=q)",re.I)
           for src in jss:
-              text = src.read_bytes().decode('utf-8', errors='replace')
-              for m in qref.finditer(text): classify(m.group('u'), src, 'js:quoted-static-ref')
+              text=src.read_bytes().decode('utf-8',errors='replace')
+              for m in qref.finditer(text):
+                  raw=m.group('u'); full=urljoin(src_url(src),raw); u=urlsplit(full)
+                  if u.netloc.lower()!=HOST:
+                      js_advisory.append({'source':src.relative_to(ROOT).as_posix(),'reference':raw,'resolved':full,'classification':'external-js-library-string'})
+                  else:
+                      path,cands=saved_candidates(u); found=next((c for c in cands if c in files),None)
+                      if not found:
+                          js_advisory.append({'source':src.relative_to(ROOT).as_posix(),'reference':raw,'resolved':full,'classification':'unresolved-js-library-string'})
 
-          def uniq_external(rows):
-              out, keys = [], set()
+          def uniq(rows,key='resolved'):
+              out=[]; s=set()
               for r in rows:
-                  key = r['resolved']
-                  if key not in keys:
-                      keys.add(key); out.append(r)
+                  k=(r.get(key),r.get('source'),r.get('kind'))
+                  if k not in s:s.add(k);out.append(r)
               return out
-          external_unique = uniq_external(external)
+          external_links=uniq(external_links)
+          external_dependencies=uniq(external_dependencies)
+          js_advisory=uniq(js_advisory)
 
-          report = {
-              'archive_root': str(ROOT),
-              'total_files': len(files),
-              'html_files': [p.relative_to(ROOT).as_posix() for p in htmls],
-              'css_files': len(csss),
-              'js_files': len(jss),
-              'local_references_ok': len(local_ok),
-              'local_references_missing': len(missing),
-              'external_reference_occurrences': len(external),
-              'external_unique_urls': len(external_unique),
-              'missing': missing,
-              'external': external_unique,
+          report={
+            'archive_root':str(ROOT), 'total_files':len(files),
+            'html_files':[p.relative_to(ROOT).as_posix() for p in htmls],
+            'css_files':len(csss),'js_files':len(jss),
+            'required_local_references_resolved':len(ok),
+            'required_local_references_missing':len(missing_required),
+            'external_navigational_links':len(external_links),
+            'external_runtime_dependencies':len(external_dependencies),
+            'js_library_advisories':len(js_advisory),
+            'missing_required':missing_required,
+            'external_links':external_links,
+            'external_dependencies':external_dependencies,
+            'js_advisory':js_advisory
           }
-          (META/'OFFLINE_VALIDATION.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+          (META/'OFFLINE_VALIDATION.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
 
-          md = []
-          md.append('# CyberFair 2019 Offline Archive Validation')
-          md.append('')
-          md.append(f'- Files in primary archive: **{len(files)}**')
-          md.append(f'- HTML pages: **{len(htmls)}**')
-          md.append(f'- Local references resolved: **{len(local_ok)}**')
-          md.append(f'- Missing local references: **{len(missing)}**')
-          md.append(f'- Unique external URLs: **{len(external_unique)}**')
-          md.append('')
-          md.append('## HTML pages')
-          for p in htmls: md.append(f'- `{p.relative_to(ROOT).as_posix()}`')
-          md.append('')
-          md.append('## Missing local references')
-          if missing:
-              for r in missing: md.append(f"- `{r['source']}` → `{r['reference']}` ({r['kind']})")
-          else:
-              md.append('- None')
-          md.append('')
-          md.append('## External URLs')
-          if external_unique:
-              for r in external_unique: md.append(f"- `{r['resolved']}` ← `{r['source']}`")
-          else:
-              md.append('- None')
-          (META/'OFFLINE_VALIDATION.md').write_text('\n'.join(md)+'\n', encoding='utf-8')
-
-          print(json.dumps({k:v for k,v in report.items() if k not in ('missing','external')}, ensure_ascii=False, indent=2))
+          md=['# CyberFair 2019 Offline Archive Validation','',
+              f'- Files in primary archive: **{len(files)}**',
+              f'- HTML pages: **{len(htmls)}**',
+              f'- Required local references resolved: **{len(ok)}**',
+              f'- Required local references missing: **{len(missing_required)}**',
+              f'- External runtime dependencies from HTML/CSS: **{len(external_dependencies)}**',
+              f'- External navigational links: **{len(external_links)}**',
+              f'- JS library advisory strings: **{len(js_advisory)}**','',
+              '## HTML pages']
+          md += [f'- `{p.relative_to(ROOT).as_posix()}`' for p in htmls]
+          md += ['','## Missing required local references']
+          md += [f"- `{r['source']}` → `{r['reference']}` ({r['kind']})" for r in missing_required] or ['- None']
+          md += ['','## External runtime dependencies']
+          md += [f"- `{r['resolved']}` ← `{r['source']}` ({r['kind']})" for r in external_dependencies] or ['- None']
+          md += ['','## External navigational links']
+          md += [f"- `{r['resolved']}` ← `{r['source']}`" for r in external_links] or ['- None']
+          md += ['','## JS library advisories (not counted as required page dependencies)']
+          md += [f"- `{r['classification']}`: `{r['resolved']}` ← `{r['source']}`" for r in js_advisory] or ['- None']
+          (META/'OFFLINE_VALIDATION.md').write_text('\n'.join(md)+'\n',encoding='utf-8')
+          print(json.dumps({k:v for k,v in report.items() if not isinstance(v,list)},ensure_ascii=False,indent=2))
           PY
 
       - name: Commit validation report
         shell: bash
         run: |
-          set -e
           git config user.name "CyberFair Preservation Bot"
           git config user.email "actions@users.noreply.github.com"
           git add rescue/metadata/OFFLINE_VALIDATION.json rescue/metadata/OFFLINE_VALIDATION.md
-          if git diff --cached --quiet; then
-            echo 'No validation changes to commit.'
-          else
-            git commit -m 'Validate CyberFair 2019 archive offline references'
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refine CyberFair 2019 offline integrity report'
             git push origin HEAD:rescue-cyber2019-archive
           fi
