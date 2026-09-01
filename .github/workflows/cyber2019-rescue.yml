@@ -1,0 +1,158 @@
+name: Rescue CyberFair 2019
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - rescue-cyber2019-archive
+    paths:
+      - .github/workflows/cyber2019-rescue.yml
+
+permissions:
+  contents: write
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout rescue branch
+        uses: actions/checkout@v4
+        with:
+          ref: rescue-cyber2019-archive
+
+      - name: Install preservation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget curl dnsutils
+
+      - name: Capture service metadata
+        shell: bash
+        run: |
+          set -o pipefail
+          rm -rf rescue
+          mkdir -p rescue/raw rescue/portable rescue/metadata
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > rescue/metadata/rescue_utc.txt
+          dig cyber2019.rfjh.ntpc.edu.tw A +noall +answer | tee rescue/metadata/dns_A.txt || true
+          dig cyber2019.rfjh.ntpc.edu.tw AAAA +noall +answer | tee rescue/metadata/dns_AAAA.txt || true
+          dig cyber2019.rfjh.ntpc.edu.tw CNAME +noall +answer | tee rescue/metadata/dns_CNAME.txt || true
+          curl -sSIL --max-time 30 https://cyber2019.rfjh.ntpc.edu.tw/index.htm | tee rescue/metadata/http_headers.txt || true
+
+      - name: Mirror original public site bytes
+        shell: bash
+        run: |
+          set -o pipefail
+          wget \
+            --mirror \
+            --page-requisites \
+            --no-parent \
+            --execute robots=off \
+            --domains cyber2019.rfjh.ntpc.edu.tw \
+            --directory-prefix rescue/raw \
+            --timeout=30 \
+            --tries=3 \
+            --waitretry=2 \
+            --user-agent="CyberFair2019-Preservation/1.0" \
+            https://cyber2019.rfjh.ntpc.edu.tw/index.htm \
+            2>&1 | tee rescue/metadata/wget_raw.log
+
+      - name: Create portable converted mirror
+        shell: bash
+        run: |
+          set -o pipefail
+          wget \
+            --mirror \
+            --page-requisites \
+            --convert-links \
+            --adjust-extension \
+            --no-parent \
+            --execute robots=off \
+            --domains cyber2019.rfjh.ntpc.edu.tw \
+            --directory-prefix rescue/portable \
+            --timeout=30 \
+            --tries=3 \
+            --waitretry=2 \
+            --user-agent="CyberFair2019-Preservation/1.0" \
+            https://cyber2019.rfjh.ntpc.edu.tw/index.htm \
+            2>&1 | tee rescue/metadata/wget_portable.log
+
+      - name: Build preservation inventories and checksums
+        shell: bash
+        run: |
+          set -e
+          find rescue/raw -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/RAW_FILE_INVENTORY.tsv
+          find rescue/portable -type f -printf '%P\t%s bytes\n' | sort > rescue/metadata/PORTABLE_FILE_INVENTORY.tsv
+          (cd rescue/raw && find . -type f -print0 | sort -z | xargs -0 sha256sum) > rescue/metadata/RAW_SHA256SUMS.txt
+          (cd rescue/portable && find . -type f -print0 | sort -z | xargs -0 sha256sum) > rescue/metadata/PORTABLE_SHA256SUMS.txt
+          du -sh rescue/raw rescue/portable | tee rescue/metadata/SIZES.txt
+
+      - name: Split files too large for normal Git storage
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          limit = 85 * 1024 * 1024
+          part = 80 * 1024 * 1024
+          records = []
+          for root in [Path('rescue/raw'), Path('rescue/portable')]:
+              for p in sorted(root.rglob('*')):
+                  if not p.is_file() or p.stat().st_size <= limit:
+                      continue
+                  size = p.stat().st_size
+                  base = p.with_name(p.name + '.split')
+                  with p.open('rb') as src:
+                      i = 0
+                      while True:
+                          data = src.read(part)
+                          if not data:
+                              break
+                          out = Path(f'{base}.{i:03d}')
+                          out.write_bytes(data)
+                          i += 1
+                  records.append(f'{p}\t{size}\t{i} parts\tcat {p.name}.split.* > {p.name}')
+                  p.unlink()
+          Path('rescue/metadata/LARGE_FILE_RECONSTRUCTION.tsv').write_text(
+              'original_path\toriginal_size\tparts\treconstruction\n' + '\n'.join(records) + ('\n' if records else ''),
+              encoding='utf-8'
+          )
+          PY
+
+      - name: Record rescue README
+        shell: bash
+        run: |
+          cat > rescue/README.md <<'EOF'
+          # CyberFair 2019 Emergency Preservation
+
+          Source: https://cyber2019.rfjh.ntpc.edu.tw/index.htm
+
+          This branch is an emergency preservation snapshot of the public 2019 International CyberFair site before the school DNS record is retired.
+
+          - `raw/` preserves the recursively downloaded public files without link conversion.
+          - `portable/` is a second mirror with local link conversion for offline/static-host testing.
+          - `metadata/` contains DNS/HTTP capture, wget logs, file inventories, SHA-256 checksums, sizes, and large-file reconstruction instructions.
+
+          The archive is preservation-first. No editorial redesign or content modernization has been applied.
+          EOF
+
+      - name: Upload immutable rescue artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyber2019-emergency-preservation
+          path: rescue
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 6
+
+      - name: Commit rescued files to preservation branch
+        shell: bash
+        run: |
+          set -e
+          git config user.name "CyberFair Preservation Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add rescue
+          if git diff --cached --quiet; then
+            echo "No rescue changes to commit."
+          else
+            git commit -m "Emergency preserve CyberFair 2019 public site"
+            git push origin HEAD:rescue-cyber2019-archive
+          fi
