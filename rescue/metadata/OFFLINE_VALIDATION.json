@@ -1,0 +1,127 @@
+{
+  "archive_root": "rescue/raw/cyber2019.rfjh.ntpc.edu.tw",
+  "total_files": 117,
+  "html_files": [
+    "green.htm",
+    "index.htm",
+    "long.htm",
+    "math.htm",
+    "narrative.htm",
+    "rain.htm",
+    "references.htm",
+    "working.htm",
+    "yellow.htm"
+  ],
+  "css_files": 5,
+  "js_files": 8,
+  "local_references_ok": 313,
+  "local_references_missing": 10,
+  "external_reference_occurrences": 15,
+  "external_unique_urls": 7,
+  "missing": [
+    {
+      "source": "index.htm",
+      "kind": "html:link@href",
+      "reference": "../../../../favicon.ico",
+      "resolved_path": "favicon.ico"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.eot?v=4.5.5",
+      "resolved_path": "fonts/ionicons.eot"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.eot?v=4.5.5#iefix",
+      "resolved_path": "fonts/ionicons.eot"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.woff2?v=4.5.5",
+      "resolved_path": "fonts/ionicons.woff2"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.woff?v=4.5.5",
+      "resolved_path": "fonts/ionicons.woff"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.ttf?v=4.5.5",
+      "resolved_path": "fonts/ionicons.ttf"
+    },
+    {
+      "source": "css/ionicons.min.css",
+      "kind": "css:url",
+      "reference": "../fonts/ionicons.svg?v=4.5.5#Ionicons",
+      "resolved_path": "fonts/ionicons.svg"
+    },
+    {
+      "source": "js/bootstrap.min.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "popper.js",
+      "resolved_path": "js/popper.js"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "default.jpg",
+      "resolved_path": "js/default.jpg"
+    },
+    {
+      "source": "js/vendor/holder.min.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "holder.js",
+      "resolved_path": "js/vendor/holder.js"
+    }
+  ],
+  "external": [
+    {
+      "source": "green.htm",
+      "kind": "html:a@href",
+      "reference": "http://www.globalschoolnet.org/gsncf/",
+      "resolved": "http://www.globalschoolnet.org/gsncf/"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://cdn.plyr.io/3.4.8/plyr.svg",
+      "resolved": "https://cdn.plyr.io/3.4.8/plyr.svg"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://cdn.plyr.io/static/blank.mp4",
+      "resolved": "https://cdn.plyr.io/static/blank.mp4"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://player.vimeo.com/api/player.js",
+      "resolved": "https://player.vimeo.com/api/player.js"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://imasdk.googleapis.com/js/sdkloader/ima3.js",
+      "resolved": "https://imasdk.googleapis.com/js/sdkloader/ima3.js"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.mp4",
+      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.mp4"
+    },
+    {
+      "source": "js/plyr.js",
+      "kind": "js:quoted-static-ref",
+      "reference": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg",
+      "resolved": "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg"
+    }
+  ]
+}
