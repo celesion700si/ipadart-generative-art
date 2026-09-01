@@ -1,0 +1,23 @@
+HTTP/2 200 
+date: Tue, 01 Sep 2026 11:57:47 GMT
+content-type: text/html
+content-length: 9350
+vary: Accept-Encoding
+server: BunnyCDN-IL1-1346
+cdn-pullzone: 108870
+cdn-requestcountrycode: US
+cache-control: public, max-age=2592000
+last-modified: Sun, 16 Jul 2023 08:56:43 GMT
+cdn-storageserver: DE-1141
+cdn-fileserver: 645
+cdn-proxyver: 1.62
+cdn-requestpullsuccess: True
+cdn-requestpullcode: 206
+cdn-cachedat: 09/01/2026 11:46:48
+cdn-edgestorageid: 940
+cdn-requestid: d5c6f373a0872f633d1c28df406adfbe
+cdn-cache: HIT
+cdn-status: 200
+cdn-requesttime: 0
+accept-ranges: bytes
+

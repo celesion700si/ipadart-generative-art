@@ -1,0 +1,2 @@
+cyber2019.rfjh.ntpc.edu.tw. 299	IN	CNAME	gvhyq7u5tmuft5ps.b-cdn.net.
+gvhyq7u5tmuft5ps.b-cdn.net. 34	IN	A	143.244.60.196

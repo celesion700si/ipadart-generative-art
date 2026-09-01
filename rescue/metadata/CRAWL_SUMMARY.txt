@@ -1,0 +1,4 @@
+visited_urls=121
+saved_200=117
+errors=4
+queue_remaining=0

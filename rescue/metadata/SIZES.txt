@@ -1,0 +1,3 @@
+99M	rescue/raw
+99M	rescue/portable
+99M	rescue/wget-fallback
