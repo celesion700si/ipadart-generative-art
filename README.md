@@ -18,6 +18,12 @@ An evolving collection of interactive generative artworks by **Ying-Pin Lin（�
 
 [Open source](./24-breaths/) · [View artwork](https://celesion700si.github.io/ipadart-generative-art/24-breaths/)
 
+### 05 · Chromatic Moiré Lab — 色彩莫列實驗室
+
+一座可於 Mac、iPad 與 iPhone 操作的色彩錯視實驗室。拖曳光柵，探索 Moiré 空間干涉、互補色色彩震動與六幀 Scanimation；介面刻意把兩種原理分開，讓觀看從直覺體驗走向理解。
+
+[Open source](./chromatic-moire-lab/) · [View artwork](https://lab.ipadart.net/chromatic-moire-lab/)
+
 ## Creative lineage
 
 | Nocturne Mesh | 24 Breaths |
