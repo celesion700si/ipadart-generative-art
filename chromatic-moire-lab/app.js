@@ -367,8 +367,8 @@
     if (state.mode === 'scanimation') {
       return '<button class="pattern active" type="button" disabled><i class="pattern-icon radial"></i><span><b>六幀動作</b><small>切片交錯 × 光柵解碼</small></span></button>';
     }
-    return patterns.map(([key, title, note, icon], index) => `
-      <button class="pattern ${index === 0 ? 'active' : ''}" data-pattern="${key}" type="button">
+    return patterns.map(([key, title, note, icon]) => `
+      <button class="pattern ${state.pattern === key ? 'active' : ''}" data-pattern="${key}" type="button">
         <i class="pattern-icon ${icon}"></i><span><b>${title}</b><small>${note}</small></span>
       </button>`).join('');
   }
