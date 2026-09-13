@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Chromatic Moiré Lab 色彩莫列實驗室：拖曳光柵，探索色彩、相位、干涉與 Scanimation 動畫。">
+  <meta name="author" content="Ying-Pin Lin">
+  <meta name="theme-color" content="#090a12">
+  <link rel="canonical" href="https://lab.ipadart.net/chromatic-moire-lab/">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23090a12'/%3E%3Cpath d='M5 7h22M5 12h22M5 17h22M5 22h22M5 27h22' stroke='%237cf7df' stroke-width='2'/%3E%3Ccircle cx='18' cy='15' r='7' fill='none' stroke='%23ff4f87' stroke-width='3'/%3E%3C/svg%3E">
+  <title>Chromatic Moiré Lab｜色彩莫列實驗室</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../" aria-label="回到 iPadART Interactive Lab">iPad<span>ART</span></a>
+    <div class="work-title">
+      <span class="eyebrow">INTERACTIVE STUDY 05</span>
+      <strong>Chromatic Moiré Lab</strong>
+    </div>
+    <button class="quiet-button" id="about-button" type="button" aria-expanded="false" aria-controls="learning-panel">觀察提示</button>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="kicker">從黑白錯視，到色彩錯視，再到時間錯視</p>
+        <h1 id="page-title">色彩不是裝飾。<br><em>它也在移動。</em></h1>
+      </div>
+      <p class="lede">拖曳透明光柵，觀察微小位移如何放大成波動、色彩震動與時間感。先用眼睛發現，再打開參數理解。</p>
+    </section>
+
+    <section class="lab-layout" aria-label="互動實驗區">
+      <div class="stage-column">
+        <div class="stage-shell">
+          <div class="canvas-frame" id="canvas-frame">
+            <canvas id="art-canvas" aria-label="彩色莫列互動畫布"></canvas>
+            <div id="film" class="film" role="slider" tabindex="0" aria-label="可左右拖曳的光柵膠片" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+              <canvas id="film-canvas"></canvas>
+              <span class="film-edge" aria-hidden="true"><b></b><b></b><b></b></span>
+            </div>
+            <div class="drag-hint" id="drag-hint" aria-hidden="true">
+              <span class="hint-arrow">↔</span>
+              <span>用手指左右拖曳光柵</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-row" aria-live="polite">
+          <span><i class="status-light"></i><b id="mode-status">莫列干涉</b></span>
+          <span>位移 <b id="phase-value">0.0 px</b></span>
+          <span>相位 <b id="phase-index">0 / 6</b></span>
+        </div>
+
+        <div class="transport" aria-label="動畫控制">
+          <button class="primary-button" id="auto-button" type="button"><span id="auto-icon">▶</span><span id="auto-label">自動掃描</span></button>
+          <button class="control-button" id="reset-button" type="button">回到起點</button>
+          <button class="control-button" id="film-button" type="button" aria-pressed="true">隱藏光柵</button>
+        </div>
+      </div>
+
+      <aside class="controls" aria-label="實驗控制面板">
+        <section class="control-card mode-card">
+          <div class="section-heading">
+            <div><span>01</span><h2>觀看方式</h2></div>
+            <small>兩種原理，不混為一談</small>
+          </div>
+          <div class="segmented" role="tablist" aria-label="觀看方式">
+            <button class="segment active" data-mode="moire" role="tab" aria-selected="true" type="button">Moiré 干涉</button>
+            <button class="segment" data-mode="scanimation" role="tab" aria-selected="false" type="button">Scanimation 動畫</button>
+          </div>
+          <p class="mode-explanation" id="mode-explanation">兩組週期結構疊合，細小差異會形成被放大的干涉波。</p>
+        </section>
+
+        <section class="control-card">
+          <div class="section-heading">
+            <div><span>02</span><h2>圖形結構</h2></div>
+            <small id="pattern-count">5 種干涉底圖</small>
+          </div>
+          <div class="pattern-grid" id="pattern-grid">
+            <button class="pattern active" data-pattern="ripple" type="button"><i class="pattern-icon rings"></i><span><b>流體漣漪</b><small>雙中心波</small></span></button>
+            <button class="pattern" data-pattern="spiral" type="button"><i class="pattern-icon spiral"></i><span><b>螺旋渦流</b><small>旋轉深度</small></span></button>
+            <button class="pattern" data-pattern="radial" type="button"><i class="pattern-icon radial"></i><span><b>放射脈衝</b><small>角度擴張</small></span></button>
+            <button class="pattern" data-pattern="tunnel" type="button"><i class="pattern-icon tunnel"></i><span><b>幾何隧道</b><small>進退錯覺</small></span></button>
+            <button class="pattern" data-pattern="waves" type="button"><i class="pattern-icon waves"></i><span><b>漂移波場</b><small>方向擺動</small></span></button>
+          </div>
+        </section>
+
+        <section class="control-card color-card">
+          <div class="section-heading">
+            <div><span>03</span><h2>色彩實驗</h2></div>
+            <small>色彩 × 相位</small>
+          </div>
+          <div class="color-modes" role="radiogroup" aria-label="色彩模式">
+            <button class="color-mode" data-color-mode="mono" role="radio" aria-checked="false" type="button"><i style="--a:#f5f2ea;--b:#14151b"></i>黑白</button>
+            <button class="color-mode active" data-color-mode="duotone" role="radio" aria-checked="true" type="button"><i style="--a:#12d8d2;--b:#ff4f87"></i>雙色</button>
+            <button class="color-mode" data-color-mode="complementary" role="radio" aria-checked="false" type="button"><i style="--a:#5965ff;--b:#ffbd2e"></i>互補</button>
+            <button class="color-mode" data-color-mode="phase" role="radio" aria-checked="false" type="button"><i class="rainbow"></i>色相相位</button>
+          </div>
+          <div class="palette-row" id="palette-row" aria-label="雙色色票">
+            <button class="swatch active" data-palette="cyan-rose" type="button" aria-label="青與玫紅" style="--a:#10d9d2;--b:#ff4f87"></button>
+            <button class="swatch" data-palette="blue-orange" type="button" aria-label="藍與橙" style="--a:#5165ff;--b:#ffad28"></button>
+            <button class="swatch" data-palette="violet-lime" type="button" aria-label="紫與萊姆綠" style="--a:#9b5cff;--b:#c8ff38"></button>
+            <button class="swatch" data-palette="red-green" type="button" aria-label="紅與綠" style="--a:#ff4b3e;--b:#19d47b"></button>
+          </div>
+          <p class="color-observation" id="color-observation"><span>試著看：</span>青與玫紅的邊界，是否比單色更像在顫動？</p>
+        </section>
+
+        <details class="control-card parameters">
+          <summary><span><i>04</i><b>打開光學參數</b></span><small>從感覺走向理解</small></summary>
+          <div class="slider-group">
+            <label for="pitch-input"><span>光柵節距 <small>Pitch</small></span><output id="pitch-output">12 px</output></label>
+            <input id="pitch-input" type="range" min="6" max="28" step="1" value="12">
+          </div>
+          <div class="slider-group" id="slit-group">
+            <label for="slit-input"><span>透光比例 <small>Slit ratio</small></span><output id="slit-output">22%</output></label>
+            <input id="slit-input" type="range" min="10" max="45" step="1" value="22">
+          </div>
+          <div class="slider-group">
+            <label for="tilt-input"><span>光柵夾角 <small>Tilt</small></span><output id="tilt-output">0.0°</output></label>
+            <input id="tilt-input" type="range" min="-5" max="5" step="0.1" value="0">
+          </div>
+          <div class="slider-group">
+            <label for="speed-input"><span>掃描速度 <small>Speed</small></span><output id="speed-output">中</output></label>
+            <input id="speed-input" type="range" min="1" max="3" step="1" value="2">
+          </div>
+        </details>
+      </aside>
+    </section>
+
+    <section class="learning-panel" id="learning-panel" hidden aria-label="觀察提示">
+      <div class="learning-header">
+        <div><span class="eyebrow">LOOK · NOTICE · WONDER</span><h2>不要急著找答案，先相信你的眼睛。</h2></div>
+        <button id="close-learning" type="button" aria-label="關閉觀察提示">×</button>
+      </div>
+      <div class="question-grid">
+        <article><span>看見</span><h3>哪個部分真的移動了？</h3><p>光柵只移動幾個像素，為什麼畫面看起來移動得更多？</p></article>
+        <article><span>比較</span><h3>換色後，速度變了嗎？</h3><p>保持同一組參數，只切換黑白、雙色與互補色，比較視覺速度。</p></article>
+        <article><span>推測</span><h3>圖像究竟藏在哪裡？</h3><p>Scanimation 不是莫列公式：六張影格被切片交錯，光柵只是依序讓它們現身。</p></article>
+      </div>
+      <div class="principle-strip">
+        <p><b>Moiré</b>｜兩組空間頻率相近的結構相減，形成低頻、被放大的干涉圖樣。</p>
+        <p><b>Scanimation</b>｜影格切片寬度 = 光柵週期 ÷ 6；透光狹縫固定為約 1/6，才能乾淨地逐格顯示。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Chromatic Moiré Lab · 2026</p>
+    <p>Ying-Pin Lin 林英斌 · Visual Arts × Creative Technology</p>
+  </footer>
+  <script src="./app.js"></script>
+</body>
+</html>
