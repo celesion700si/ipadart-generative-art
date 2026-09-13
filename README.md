@@ -4,6 +4,8 @@ An evolving collection of interactive generative artworks by **Ying-Pin Lin（�
 
 這是一個持續發展中的互動生成藝術作品集，也是一份公開的創作與學習紀錄。
 
+[Visit the public gallery](https://lab.ipadart.net/)
+
 ## Artworks
 
 ### 01 · Nocturne Mesh — 夜巡之網
