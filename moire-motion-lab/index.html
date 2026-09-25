@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111a24">
+  <meta name="description" content="一件用 Two.js 創作的互動視覺實驗：拖曳兩層規律，觀察莫列紋如何在眼前出現。">
+  <title>重疊之間｜Moiré Motion Lab</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;color:#f5f0e7;background:#111a24;font-synthesis:none}
+    *{box-sizing:border-box}body{margin:0;min-width:320px}button,input{font:inherit}button{cursor:pointer}a{color:inherit}
+    .shell{max-width:1500px;margin:auto;padding:24px clamp(18px,4vw,64px) 50px}
+    .top{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #ffffff2a;padding-bottom:20px}
+    .brand{font-weight:800;letter-spacing:-.04em;text-decoration:none;font-size:19px}.brand span{color:#ffad79}.edition{color:#aab6be;letter-spacing:.17em;font-size:11px}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,400px);gap:24px;align-items:end;padding:clamp(38px,6vw,85px) 0 32px}
+    .eyebrow{margin:0 0 20px;color:#ffad79;font-size:11px;letter-spacing:.23em;font-weight:700}
+    h1{font-family:Georgia,"Noto Serif TC",serif;font-size:clamp(48px,7vw,112px);font-weight:400;letter-spacing:-.065em;line-height:.98;margin:0}
+    h1 em{color:#ffad79;font-weight:400}.intro{color:#b9c6cc;line-height:1.85;font-size:15px;margin:0 0 5px}
+    .lab{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:stretch}
+    .art-wrap{min-width:0}.stage{height:clamp(400px,55vw,660px);position:relative;overflow:hidden;background:#f4f0e7;touch-action:none;cursor:grab;border-radius:3px;box-shadow:0 24px 70px #0004}
+    .stage.dragging{cursor:grabbing}.stage svg{display:block;width:100%;height:100%}.stage:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px #1d2a321a,inset 0 0 90px #f4f0e7aa}
+    .stage-label,.coordinate{position:absolute;z-index:2;background:#f4f0e7d9;color:#24313a;font-size:11px;letter-spacing:.12em;padding:10px 12px;pointer-events:none}
+    .stage-label{top:18px;left:18px}.coordinate{bottom:18px;right:18px;font-variant-numeric:tabular-nums}
+    .stage-hint{position:absolute;bottom:18px;left:18px;z-index:2;background:#111a24e6;padding:12px 15px;font-size:12px;pointer-events:none;transition:opacity .3s}
+    .stage.interacted .stage-hint{opacity:0}.below{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:17px 2px;color:#aab6be;font-size:12px;line-height:1.5}.below strong{color:#f3eee7;font-weight:500}.below button{border:1px solid #82929b;color:#f5f0e7;background:transparent;padding:9px 13px;white-space:nowrap}
+    .panel{border:1px solid #ffffff2b;padding:26px 24px;background:#1a2631;display:flex;flex-direction:column;gap:24px}.panel h2{font-family:Georgia,serif;font-weight:400;font-size:28px;margin:0}.panel-top p{margin:9px 0 0;color:#aab6be;font-size:12px;line-height:1.6}
+    .control{display:block}.control-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px;gap:8px}.control-head label{font-size:13px}.control-head output{color:#ffad79;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    input[type=range]{width:100%;margin:0;accent-color:#ffad79;cursor:pointer;min-height:30px}.scale{display:flex;justify-content:space-between;color:#82949f;font-size:10px;margin-top:4px}
+    .reset{background:#ffad79;border:0;color:#17222c;padding:14px;font-weight:700;margin-top:auto}.reset:hover{background:#ffd0ac}.reset:focus-visible,.below button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #ffad79;outline-offset:3px}
+    .observation{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:48px}.observation article{border-top:1px solid #ffffff42;padding-top:17px}.observation span{color:#ffad79;font-size:11px;letter-spacing:.16em}.observation h3{font-weight:500;font-size:17px;margin:14px 0 8px}.observation p{color:#aab6be;font-size:13px;line-height:1.8;margin:0}
+    footer{display:flex;justify-content:space-between;gap:16px;color:#7f929f;font-size:11px;border-top:1px solid #ffffff25;margin-top:58px;padding-top:20px}
+    @media(max-width:900px){.lab{grid-template-columns:1fr}.panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}.panel-top,.reset{grid-column:1/-1}.hero{grid-template-columns:1fr}.intro{max-width:580px}.stage{height:min(70vw,620px);min-height:410px}}
+    @media(max-width:600px){.shell{padding:18px 15px 34px}.top{padding-bottom:15px}.edition{font-size:9px}.hero{padding:42px 0 26px;gap:16px}.intro{font-size:14px}.stage{height:min(115vw,510px);min-height:350px}.stage-label{top:10px;left:10px}.stage-hint{left:10px;bottom:10px}.coordinate{right:10px;bottom:10px}.panel{padding:19px;gap:13px}.observation{grid-template-columns:1fr;margin-top:38px}.below{align-items:flex-start}.below span{max-width:240px}footer{display:block;line-height:1.8}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top"><a class="brand" href="../">iPad<span>ART</span> / LAB</a><span class="edition">TWO.JS · VISUAL STUDY 01</span></header>
+    <main>
+      <section class="hero"><div><p class="eyebrow">MOVE · ROTATE · OBSERVE</p><h1>重疊<br><em>之間。</em></h1></div><p class="intro">兩組安靜的線條，一旦重疊，便開始在眼前流動。用手指移動上層圖樣，捕捉那個看似移動、其實留在原地的波紋。</p></section>
+      <section class="lab" aria-label="莫列互動實驗">
+        <div class="art-wrap"><div class="stage" id="stage" role="img" aria-label="兩組由 Two.js 畫出的線條重疊圖樣，可用滑鼠或手指拖曳第二層">
+          <span class="stage-label">01 / OVERLAP FIELD</span><span class="stage-hint">↔ 拖曳畫面，讓波紋出現</span><span class="coordinate" id="coordinate">X 0 · Y 0</span>
+        </div><div class="below"><span><strong>看見了嗎？</strong> 留意真正移動的是哪一層，以及你感覺到的波紋如何改變。</span><button type="button" id="download">保存圖像 SVG ↓</button></div></div>
+        <aside class="panel" aria-label="實驗參數"><div class="panel-top"><h2>調整規律</h2><p>一次只改一項，再觀察畫面怎麼回答。</p></div>
+          <div class="control"><div class="control-head"><label for="spacing">線條間距 · Spacing</label><output id="spacing-out" for="spacing">14 px</output></div><input id="spacing" type="range" min="8" max="28" step="1" value="14"><div class="scale"><span>緊密</span><span>疏朗</span></div></div>
+          <div class="control"><div class="control-head"><label for="rotation">交會角度 · Rotation</label><output id="rotation-out" for="rotation">3.0°</output></div><input id="rotation" type="range" min="-15" max="15" step="0.5" value="3"><div class="scale"><span>−15°</span><span>＋15°</span></div></div>
+          <div class="control"><div class="control-head"><label for="width">筆畫粗細 · Stroke</label><output id="width-out" for="width">2.0 px</output></div><input id="width" type="range" min="0.8" max="5" step="0.2" value="2"><div class="scale"><span>細</span><span>粗</span></div></div>
+          <div class="control"><div class="control-head"><label for="offset">水平位移 · Offset</label><output id="offset-out" for="offset">0 px</output></div><input id="offset" type="range" min="-80" max="80" step="1" value="0"><div class="scale"><span>← 左</span><span>右 →</span></div></div>
+          <button class="reset" id="reset" type="button">回到起點 ↺</button>
+        </aside>
+      </section>
+      <section class="observation" aria-label="觀察與提問"><article><span>01 / NOTICE</span><h3>什麼在移動？</h3><p>停住手指後，線條停了，波紋也立刻停下嗎？試著區分實際位移與視覺感受。</p></article><article><span>02 / COMPARE</span><h3>角度差一點點呢？</h3><p>把角度接近 0°，再慢慢增加。波紋的方向與間距如何變化？</p></article><article><span>03 / CREATE</span><h3>為波紋命名</h3><p>選一個意外出現的構圖，保存圖像，給它一個比「視錯覺」更有意思的名字。</p></article></section>
+    </main><footer><span>© 2026 Ying-Pin Lin 林英斌 · iPadART Interactive Lab</span><span>以 Two.js 繪製 · 可在 iPad、手機與電腦操作</span></footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/two.js@0.8.24/build/two.min.js"></script>
+  <script>
+    (() => {
+      const stage = document.getElementById('stage');
+      if (typeof Two === 'undefined') {
+        stage.querySelector('.stage-hint').textContent = '圖形載入失敗，請確認網路連線後重新整理。';
+        return;
+      }
+      const inputs = Object.fromEntries(['spacing','rotation','width','offset'].map(id => [id, document.getElementById(id)]));
+      const defaults = {spacing:14, rotation:3, width:2, offset:0};
+      const coordinate = document.getElementById('coordinate');
+      const two = new Two({type:Two.Types.svg,width:stage.clientWidth,height:stage.clientHeight}).appendTo(stage);
+      const base = two.makeGroup(), moving = two.makeGroup();
+      let baseLines = [], movingLines = [], drag = null, translation = {x:0,y:0};
+      const values = () => Object.fromEntries(Object.entries(inputs).map(([key,input]) => [key,Number(input.value)]));
+      function updateLabels(){
+        const v=values();
+        document.getElementById('spacing-out').textContent=`${v.spacing} px`;
+        document.getElementById('rotation-out').textContent=`${v.rotation.toFixed(1)}°`;
+        document.getElementById('width-out').textContent=`${v.width.toFixed(1)} px`;
+        document.getElementById('offset-out').textContent=`${v.offset} px`;
+        coordinate.textContent=`X ${Math.round(v.offset+translation.x)} · Y ${Math.round(translation.y)}`;
+      }
+      function rebuild(){
+        baseLines.forEach(line=>line.remove());movingLines.forEach(line=>line.remove());
+        baseLines=[];movingLines=[];
+        const {spacing,width}=values();
+        const size=Math.hypot(two.width,two.height)+200;
+        const count=Math.ceil(size/spacing);
+        for(let i=-count;i<=count;i++){
+          const x=i*spacing;
+          const a=two.makeLine(x,-size,x,size);
+          a.stroke='#1b3545';a.linewidth=width;a.opacity=.72;base.add(a);baseLines.push(a);
+          const b=two.makeLine(x,-size,x,size);
+          b.stroke='#c45540';b.linewidth=width;b.opacity=.62;moving.add(b);movingLines.push(b);
+        }
+        transform();
+      }
+      function transform(){
+        const v=values();
+        base.translation.set(two.width/2,two.height/2);
+        moving.translation.set(two.width/2+v.offset+translation.x,two.height/2+translation.y);
+        moving.rotation=v.rotation*Math.PI/180;
+        updateLabels();two.update();
+      }
+      inputs.spacing.addEventListener('input',rebuild);
+      inputs.width.addEventListener('input',()=>{const w=values().width;baseLines.forEach(l=>l.linewidth=w);movingLines.forEach(l=>l.linewidth=w);transform()});
+      inputs.rotation.addEventListener('input',transform);inputs.offset.addEventListener('input',transform);
+      stage.addEventListener('pointerdown',e=>{
+        if(e.button!==0 && e.pointerType==='mouse')return;
+        drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:translation.x,y:translation.y};
+        stage.setPointerCapture(e.pointerId);stage.classList.add('dragging','interacted');e.preventDefault();
+      });
+      stage.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;translation.x=drag.x+e.clientX-drag.startX;translation.y=drag.y+e.clientY-drag.startY;transform()});
+      function endDrag(e){if(drag&&drag.id===e.pointerId){drag=null;stage.classList.remove('dragging')}}
+      stage.addEventListener('pointerup',endDrag);stage.addEventListener('pointercancel',endDrag);
+      document.getElementById('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([key,value])=>inputs[key].value=value);translation={x:0,y:0};rebuild()});
+      document.getElementById('download').addEventListener('click',()=>{
+        two.update();
+        const clone=two.renderer.domElement.cloneNode(true);
+        clone.setAttribute('xmlns','http://www.w3.org/2000/svg');clone.setAttribute('viewBox',`0 0 ${two.width} ${two.height}`);
+        const background=document.createElementNS('http://www.w3.org/2000/svg','rect');
+        background.setAttribute('width','100%');background.setAttribute('height','100%');background.setAttribute('fill','#f4f0e7');
+        clone.insertBefore(background,clone.firstChild);
+        const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml'});
+        const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='moire-motion-lab.svg';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      });
+      const observer=new ResizeObserver(()=>{const w=stage.clientWidth,h=stage.clientHeight;if(w===two.width&&h===two.height)return;two.width=w;two.height=h;two.renderer.setSize(w,h);rebuild()});
+      observer.observe(stage);rebuild();
+    })();
+  </script>
+</body>
+</html>
