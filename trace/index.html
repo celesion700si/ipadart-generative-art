@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TRACE — Interactive Lab</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10131c;color:#f6f2eb}canvas{position:fixed;inset:0;display:block;touch-action:none;cursor:crosshair}.grain{position:fixed;inset:0;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E")}.brand,.hint,.controls{position:fixed;z-index:2;pointer-events:none}.brand{left:clamp(22px,4vw,64px);top:clamp(22px,4vw,52px)}.eyebrow{font-size:11px;letter-spacing:.34em;color:#aaadb7}.brand h1{font-size:clamp(56px,10vw,148px);font-weight:500;line-height:.84;letter-spacing:-.09em;margin:18px 0 12px}.brand p{font-size:13px;letter-spacing:.18em;color:#c1c2ca;margin:0}.hint{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;transition:opacity .5s;white-space:nowrap}.hint span{font-size:12px;letter-spacing:.35em}.hint small{display:block;margin-top:14px;color:#a0a3af;font-size:11px;letter-spacing:.14em}.hint.hidden{opacity:0}.controls{bottom:clamp(24px,4vw,54px);left:clamp(22px,4vw,64px);right:clamp(22px,4vw,64px);display:flex;justify-content:space-between;align-items:end;gap:20px;font-size:11px;letter-spacing:.17em;color:#aeb0ba}.controls strong{display:block;color:#edeae4;font-weight:500;margin-bottom:8px}.controls .right{text-align:right}.controls button{pointer-events:auto;color:#f5f1e9;background:none;border:1px solid #797c88;border-radius:100px;padding:10px 17px;font:inherit;letter-spacing:inherit;cursor:pointer}.controls button:hover{background:#ffffff18}@media(max-width:600px){.brand h1{font-size:64px}.hint{top:54%}.controls{font-size:9px;letter-spacing:.09em}}
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="Interactive canvas. Tap, drag, or hold to create colorful geometric traces."></canvas><div class="grain"></div>
+<header class="brand"><div class="eyebrow">INTERACTIVE LAB / 001</div><h1>TRACE<span style="color:#ef785d">.</span></h1><p>AN INTERACTIVE STUDY OF GESTURE</p></header>
+<div class="hint" id="hint"><span>TOUCH TO BEGIN</span><small>TAP · DRAG · HOLD · RELEASE</small></div>
+<footer class="controls"><div><strong>YOUR GESTURE LEAVES A TRACE</strong>Tap → Shape &nbsp; / &nbsp; Drag → Trail &nbsp; / &nbsp; Hold → Build</div><div class="right"><button id="clear" type="button">CLEAR CANVAS</button><div style="margin-top:12px">MOVE, PAUSE, LET GO.</div></div></footer>
+<script>
+(()=>{
+const canvas=document.querySelector('#stage'),ctx=canvas.getContext('2d'),hint=document.querySelector('#hint');
+const palette=['#f27662','#f9bd75','#eedc9d','#a4d8cd','#b2a9e8','#e8a8c5'];
+let width=0,height=0,dpr=1,particles=[],active=new Map(),lastTime=performance.now();
+function resize(){dpr=Math.min(devicePixelRatio||1,2);width=innerWidth;height=innerHeight;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=width+'px';canvas.style.height=height+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}
+resize();addEventListener('resize',resize);
+function spawn(x,y,energy=1){if(particles.length>600)particles.splice(0,particles.length-600);const type=Math.floor(Math.random()*4),size=(14+Math.random()*32)*energy;particles.push({x,y,type,size,age:0,life:1.1+Math.random()*.85,angle:Math.random()*Math.PI*2,spin:(Math.random()-.5)*2.2,color:palette[Math.floor(Math.random()*palette.length)],vx:(Math.random()-.5)*34,vy:(Math.random()-.5)*34})}
+function start(e){e.preventDefault();canvas.setPointerCapture(e.pointerId);active.set(e.pointerId,{x:e.clientX,y:e.clientY,held:0});spawn(e.clientX,e.clientY,1.25);hint.classList.add('hidden')}
+function move(e){const p=active.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y,dist=Math.hypot(dx,dy);if(dist>7){const steps=Math.min(16,Math.floor(dist/17)+1);for(let i=1;i<=steps;i++)spawn(p.x+dx*i/steps,p.y+dy*i/steps,.65+Math.random()*.28);p.x=e.clientX;p.y=e.clientY;p.held=0}}
+function end(e){active.delete(e.pointerId)}
+canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);document.querySelector('#clear').addEventListener('click',()=>{particles=[]});
+function shape(p){ctx.beginPath();const s=p.size;if(p.type===0){ctx.arc(0,0,s*.5,0,Math.PI*2)}else if(p.type===1){ctx.rect(-s*.46,-s*.46,s*.92,s*.92)}else if(p.type===2){ctx.moveTo(0,-s*.6);ctx.lineTo(s*.55,s*.42);ctx.lineTo(-s*.55,s*.42);ctx.closePath()}else{ctx.arc(0,0,s*.48,0,Math.PI*2);ctx.moveTo(s*.8,0);ctx.arc(0,0,s*.8,0,Math.PI*2)}ctx.stroke()}
+function frame(now){let dt=Math.min((now-lastTime)/1000,.05);lastTime=now;ctx.clearRect(0,0,width,height);for(const p of active.values()){p.held+=dt;if(p.held>.1){p.held=0;spawn(p.x+(Math.random()-.5)*32,p.y+(Math.random()-.5)*32,.55)}}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.age+=dt;if(p.age>=p.life){particles.splice(i,1);continue}const t=p.age/p.life,ease=1-Math.pow(1-t,2);ctx.save();ctx.translate(p.x+p.vx*p.age,p.y+p.vy*p.age);ctx.rotate(p.angle+p.spin*p.age);ctx.scale(.35+ease*1.6,.35+ease*1.6);ctx.globalAlpha=Math.pow(1-t,1.4)*.85;ctx.lineWidth=2;ctx.strokeStyle=p.color;shape(p);ctx.restore()}requestAnimationFrame(frame)}requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
