@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -30,6 +30,7 @@
     height:100vh;
     background:#120b0c;
   }
+  #back{position:fixed;z-index:10;top:max(18px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));padding:10px 13px;border:1px solid rgba(255,255,255,.35);border-radius:999px;color:rgba(255,255,255,.8);background:rgba(18,11,12,.6);backdrop-filter:blur(10px);font:600 10px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:.13em;text-decoration:none}#back:hover,#back:focus-visible{color:#fff;border-color:#fff;outline-offset:3px}
   .label{
     position:fixed;
     left:max(18px,env(safe-area-inset-left));
@@ -73,13 +74,14 @@
 </head>
 <body>
 <canvas id="art"></canvas>
+<a id="back" href="https://www.ipadart.net/interactive-works-%E4%BA%92%E5%8B%95%E4%BD%9C%E5%93%81">← BACK TO WORKS</a>
 
 <div class="label">
   <h1>24 Breaths of ADE Taiwan</h1>
   <p>TAIWAN ADE LIVING CONSTELLATION</p>
 </div>
 
-<div class="hint">移動或觸碰，讓 24 個呼吸彼此共振</div>
+<div class="hint">MOVE OR TOUCH · LET 24 BREATHS RESONATE</div>
 
 <script>
 (() => {
