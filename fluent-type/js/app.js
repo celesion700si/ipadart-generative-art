@@ -393,7 +393,21 @@ function bindNodeEditorPointerEvents() {
   };
 
   svg.addEventListener('pointerdown', (e) => {
-    const target = e.target;
+    let target = e.target;
+    // Touch & Apple Pencil: nodes are small on screen, so snap to the nearest one within reach
+    if (!target.dataset.type && e.pointerType !== 'mouse') {
+      let best = null;
+      let bestDist = 26;
+      svg.querySelectorAll('[data-type]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const d = Math.hypot(r.left + r.width / 2 - e.clientX, r.top + r.height / 2 - e.clientY);
+        if (d < bestDist) {
+          bestDist = d;
+          best = el;
+        }
+      });
+      if (best) target = best;
+    }
     const type = target.dataset.type;
     if (!type) {
       state.editor.selectedNode = null;

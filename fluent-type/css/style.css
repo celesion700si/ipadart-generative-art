@@ -693,3 +693,154 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   z-index: 999;
 }
+
+/* ==========================================================================
+   Responsive & touch adjustments (iPad / iPhone)
+   ========================================================================== */
+
+/* Use the dynamic viewport so Safari's toolbars never cover the bottom edge */
+@supports (height: 100dvh) {
+  html, body { height: 100dvh; }
+  .app-shell { height: 100dvh; }
+}
+
+/* Dragging nodes must not scroll or zoom the page on touch screens */
+#editor-svg {
+  touch-action: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.tab-btn,
+.btn,
+.seg-btn,
+.preset-chip,
+.filter-chip,
+.checkbox-pill {
+  white-space: nowrap;
+}
+
+/* Finger-sized controls on touch devices */
+@media (pointer: coarse) {
+  input[type="range"] { height: 6px; }
+  input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
+  .preset-chip { padding: 9px 8px; }
+  .filter-chip { padding: 7px 11px; }
+  .seg-btn { padding: 7px 12px; }
+  .btn-sm { padding: 8px 12px; }
+  .btn-text { padding: 6px 4px; font-size: 12px; }
+}
+
+/* --- iPad landscape and small laptops --------------------------------- */
+@media (max-width: 1200px) {
+  .brand-tag { display: none; }
+  .sidebar { width: 260px; }
+  .glyph-grid-panel { width: 280px; }
+  .glyph-grid { grid-template-columns: repeat(3, 1fr); }
+  .toolbar {
+    height: auto;
+    min-height: 48px;
+    flex-wrap: wrap;
+    padding: 8px 18px;
+    gap: 10px 18px;
+  }
+  .editor-toolbar {
+    height: auto;
+    min-height: 52px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 18px;
+  }
+  .editor-hint {
+    white-space: normal;
+    text-align: center;
+    width: max-content;
+    max-width: calc(100% - 28px);
+    border-radius: 12px;
+  }
+}
+
+/* --- iPad portrait: parameters move above the stage -------------------- */
+@media (max-width: 960px) {
+  .status-badge { display: none; }
+  .topbar { padding: 0 12px; gap: 10px; }
+  .tab-btn { padding: 6px 10px; }
+
+  .workspace-container { flex-direction: column; }
+  .main-stage { min-height: 0; }
+
+  .sidebar {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 16px 14px;
+    overflow: visible;
+  }
+  .sidebar-header { margin-bottom: 8px; }
+  .presets-bar { grid-template-columns: repeat(4, 1fr); margin-bottom: 12px; }
+  .sliders-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 20px;
+  }
+  .metrics-info { display: none; }
+
+  .toolbar { padding: 8px 16px; }
+  .toolbar-divider { display: none; }
+  .specimen-editor-bar { padding: 10px 16px; }
+  .specimen-canvas-wrap { padding: 20px 16px; }
+
+  /* Glyphs view: grid becomes a swipeable strip above the editor */
+  .glyphs-layout { flex-direction: column; }
+  .glyph-grid-panel {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .glyph-filter-bar { padding: 8px 12px; }
+  .glyph-grid {
+    flex: none;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px 12px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .glyph-cell {
+    flex: 0 0 76px;
+    height: 76px;
+    scroll-snap-align: start;
+  }
+  .node-editor-panel { min-height: 0; }
+  .editor-canvas-wrap { min-height: 0; }
+  #editor-svg { max-width: 100%; max-height: 100%; }
+  .editor-toolbar { padding: 8px 16px; }
+}
+
+/* --- iPhone and narrow split view ------------------------------------- */
+@media (max-width: 640px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .view-switcher { order: 3; width: 100%; }
+  .tab-btn { flex: 1; justify-content: center; }
+  .export-actions .btn { padding: 7px 10px; }
+
+  .workspace-container { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .sidebar { flex-shrink: 0; }
+  .presets-bar { grid-template-columns: repeat(2, 1fr); }
+  .sliders-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+  .zh-sub { display: none; }
+
+  .main-stage { flex: none; min-height: 78vh; }
+  .toolbar-group input[type="range"] { width: 90px; }
+  .checkbox-pill { margin-left: 0; }
+  .editor-actions { width: 100%; }
+  .editor-actions .btn { flex: 1; }
+  .glyph-cell { flex-basis: 64px; height: 64px; }
+  .toast { left: 12px; right: 12px; bottom: 12px; text-align: center; }
+}
