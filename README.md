@@ -1,6 +1,6 @@
 # iPadART Generative Art
 
-An evolving collection of interactive generative artworks by **Ying-Pin Lin（林英斌）**—visual arts educator, Apple Distinguished Educator, Apple Learning Coach, and Apple Professional Learning Specialist.
+An evolving collection of interactive generative artworks by **Yin-Ping Lin（林英斌）**—visual arts educator, Apple Distinguished Educator, Apple Learning Coach, and Apple Professional Learning Specialist.
 
 這是一個持續發展中的互動生成藝術作品集，也是一份公開的創作與學習紀錄。
 
@@ -53,7 +53,7 @@ An evolving collection of interactive generative artworks by **Ying-Pin Lin（�
 
 ## Artist
 
-**Ying-Pin Lin / 林英斌**  
+**Yin-Ping Lin / 林英斌**  
 Visual Arts · Apple Technology · Artful Learning  
 [iPadART.net](https://www.ipadart.net/)
 
@@ -63,4 +63,4 @@ This repository intentionally preserves the source and development history of th
 
 ## Copyright
 
-© 2026 Ying-Pin Lin. All rights reserved. Source code and artworks may not be reproduced or redistributed without permission unless a future license states otherwise.
+© 2026 Yin-Ping Lin. All rights reserved. Source code and artworks may not be reproduced or redistributed without permission unless a future license states otherwise.
