@@ -731,6 +731,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   .btn-text { padding: 6px 4px; font-size: 12px; }
 }
 
+.checkbox-pill-follow { margin-left: 0; }
+
 /* Font name / designer fields */
 .font-identity {
   display: grid;

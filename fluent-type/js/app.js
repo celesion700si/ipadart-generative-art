@@ -18,7 +18,8 @@ const state = {
     fontSize: 96,
     tracking: 10,
     renderMode: 'solid',
-    showMetrics: true
+    showMetrics: true,
+    kerning: true
   },
   editor: {
     selectedChar: 'A',
@@ -160,6 +161,14 @@ function bindSpecimenControls() {
     });
   });
 
+  const kerningToggle = document.getElementById('toggle-kerning');
+  if (kerningToggle) {
+    kerningToggle.addEventListener('change', () => {
+      state.specimen.kerning = kerningToggle.checked;
+      renderSpecimen();
+    });
+  }
+
   metricsToggle.addEventListener('change', () => {
     state.specimen.showMetrics = metricsToggle.checked;
     renderSpecimen();
@@ -168,7 +177,7 @@ function bindSpecimenControls() {
 
 function renderSpecimen() {
   const svg = document.getElementById('specimen-svg');
-  const { text, fontSize, tracking, renderMode, showMetrics } = state.specimen;
+  const { text, fontSize, tracking, renderMode, showMetrics, kerning } = state.specimen;
   const scale = fontSize / FONT_METRICS.unitsPerEm;
   const lines = text.split('\n');
   const lineHeight = fontSize * 1.38;
@@ -176,16 +185,23 @@ function renderSpecimen() {
   const padY = 28;
 
   let maxLineWidth = 600;
+  const kernCtx = kerning ? getKernContext(state.glyphMap) : null;
   const pathsMarkup = [];
   const guidesMarkup = [];
 
   lines.forEach((line, lineIdx) => {
     const baselineY = padY + lineIdx * lineHeight + FONT_METRICS.ascender * scale;
     let cursorX = padX;
+    let prevCh = null;
 
     for (const ch of line) {
       const glyph = state.glyphMap.get(ch) || state.glyphMap.get(' ');
       if (!glyph) continue;
+
+      if (kerning && prevCh !== null && state.glyphMap.has(ch)) {
+        cursorX += getKerning(state.glyphMap, prevCh, ch, kernCtx) * scale;
+      }
+      prevCh = state.glyphMap.has(ch) ? ch : null;
 
       if (glyph.contours.length > 0) {
         const d = contoursToSvgPath(glyph.contours, cursorX, baselineY, scale, true);
@@ -517,7 +533,8 @@ function bindExportButtons() {
       const typed = nameInput ? nameInput.value : '';
       const result = exportFont(state.glyphMap, {
         familyName: typed,
-        designer: designerInput ? designerInput.value : ''
+        designer: designerInput ? designerInput.value : '',
+        kerning: state.specimen.kerning
       });
       if (nameInput) nameInput.value = result.familyName;
       let msg = `已編譯並下載 ${result.filename}`;

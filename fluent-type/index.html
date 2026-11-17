@@ -171,7 +171,12 @@
               <button id="mode-outline" class="seg-btn" data-render-mode="outline">純輪廓線 Outline</button>
             </div>
 
-            <label class="checkbox-pill">
+            <label class="checkbox-pill" title="自動字距微調：拉近 AV、To 這類字母組合，並寫入匯出的字型">
+              <input type="checkbox" id="toggle-kerning" checked />
+              <span>字距微調 Kerning</span>
+            </label>
+
+            <label class="checkbox-pill checkbox-pill-follow">
               <input type="checkbox" id="toggle-specimen-metrics" checked />
               <span>輔助線 Metrics</span>
             </label>
@@ -242,6 +247,7 @@ Organic Sketch 0123!</textarea>
 
   <script src="js/glyph-definitions.js"></script>
   <script src="js/procedural-engine.js"></script>
+  <script src="js/kerning.js"></script>
   <script src="js/ttf-exporter.js"></script>
   <script src="js/app.js"></script>
 </body>

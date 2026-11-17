@@ -145,7 +145,133 @@ function glyphContoursToOpentypePath(contours) {
 }
 
 /**
- * Compile and download the font. Returns { filename, familyName, unmerged }.
+ * Build an OpenType GPOS table holding one "kern" feature (pair adjustment).
+ * pairs: [{ first, second, value }] using glyph indices.
+ */
+function buildGposKernTable(pairs) {
+  const byFirst = new Map();
+  for (const p of pairs) {
+    if (!byFirst.has(p.first)) byFirst.set(p.first, []);
+    byFirst.get(p.first).push(p);
+  }
+  const firsts = Array.from(byFirst.keys()).sort((a, b) => a - b);
+  firsts.forEach((f) => byFirst.get(f).sort((a, b) => a.second - b.second));
+
+  const bytes = [];
+  const u16 = (v) => bytes.push((v >> 8) & 0xff, v & 0xff);
+  const tag = (t) => { for (const ch of t) bytes.push(ch.charCodeAt(0)); };
+
+  // Header (version 1.0) — ScriptList, FeatureList and LookupList follow in order
+  const scriptListOffset = 10;
+  const scriptListSize = 2 + 2 * 6 + 2 * 12; // count, two script records, two script tables
+  const featureListOffset = scriptListOffset + scriptListSize;
+  const featureListSize = 2 + 6 + 6;
+  const lookupListOffset = featureListOffset + featureListSize;
+  u16(1); u16(0); u16(scriptListOffset); u16(featureListOffset); u16(lookupListOffset);
+
+  // ScriptList: DFLT and latn, each with a default language system using feature 0
+  u16(2);
+  tag('DFLT'); u16(14);
+  tag('latn'); u16(14 + 12);
+  for (let i = 0; i < 2; i++) {
+    u16(4); u16(0);              // Script: defaultLangSys offset, langSysCount
+    u16(0); u16(0xffff); u16(1); // LangSys: lookupOrder, requiredFeature, featureCount
+    u16(0);                      //          featureIndex[0]
+  }
+
+  // FeatureList: kern -> lookup 0
+  u16(1); tag('kern'); u16(8);
+  u16(0); u16(1); u16(0);
+
+  // LookupList: one PairPos lookup with a single format-1 subtable
+  u16(1); u16(4);
+  u16(2); u16(0); u16(1); u16(8);
+
+  // PairPosFormat1
+  const pairSetCount = firsts.length;
+  const headerSize = 10 + pairSetCount * 2;
+  const coverageSize = 4 + pairSetCount * 2;
+  let running = headerSize + coverageSize;
+  const pairSetOffsets = firsts.map((f) => {
+    const off = running;
+    running += 2 + byFirst.get(f).length * 4;
+    return off;
+  });
+  if (running > 0xffff) throw new Error('字距資料過大，無法寫入字型。');
+
+  u16(1); u16(headerSize); u16(0x0004); u16(0); u16(pairSetCount);
+  pairSetOffsets.forEach(u16);
+  u16(1); u16(pairSetCount); firsts.forEach(u16); // Coverage format 1
+  for (const f of firsts) {
+    const list = byFirst.get(f);
+    u16(list.length);
+    for (const p of list) { u16(p.second); u16(p.value & 0xffff); }
+  }
+  return new Uint8Array(bytes);
+}
+
+/**
+ * Add a table to a finished OpenType file and repair the directory and checksums.
+ */
+function addTableToFont(buffer, tableTag, tableBytes) {
+  const src = new DataView(buffer);
+  const srcBytes = new Uint8Array(buffer);
+  const numTables = src.getUint16(4);
+  const tables = [];
+  for (let i = 0; i < numTables; i++) {
+    const o = 12 + i * 16;
+    const t = String.fromCharCode(srcBytes[o], srcBytes[o + 1], srcBytes[o + 2], srcBytes[o + 3]);
+    const offset = src.getUint32(o + 8);
+    const length = src.getUint32(o + 12);
+    tables.push({ tag: t, data: srcBytes.slice(offset, offset + length) });
+  }
+  tables.push({ tag: tableTag, data: tableBytes });
+  tables.sort((a, b) => (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : 0));
+
+  const n = tables.length;
+  const pad4 = (v) => (v + 3) & ~3;
+  let offset = 12 + n * 16;
+  for (const t of tables) { t.offset = offset; offset += pad4(t.data.length); }
+
+  const out = new Uint8Array(offset);
+  const view = new DataView(out.buffer);
+  out.set(srcBytes.subarray(0, 4), 0); // keep the sfnt version ("OTTO")
+  const entrySelector = Math.floor(Math.log2(n));
+  const searchRange = Math.pow(2, entrySelector) * 16;
+  view.setUint16(4, n);
+  view.setUint16(6, searchRange);
+  view.setUint16(8, entrySelector);
+  view.setUint16(10, n * 16 - searchRange);
+
+  const checksum = (start, length) => {
+    let sum = 0;
+    const end = start + pad4(length);
+    for (let i = start; i < end; i += 4) sum = (sum + view.getUint32(i)) >>> 0;
+    return sum;
+  };
+
+  let headOffset = -1;
+  tables.forEach((t, i) => {
+    out.set(t.data, t.offset);
+    if (t.tag === 'head') {
+      headOffset = t.offset;
+      view.setUint32(t.offset + 8, 0); // checkSumAdjustment is recomputed below
+    }
+    const o = 12 + i * 16;
+    for (let k = 0; k < 4; k++) out[o + k] = t.tag.charCodeAt(k);
+    view.setUint32(o + 4, checksum(t.offset, t.data.length));
+    view.setUint32(o + 8, t.offset);
+    view.setUint32(o + 12, t.data.length);
+  });
+
+  if (headOffset >= 0) {
+    view.setUint32(headOffset + 8, (0xb1b0afba - checksum(0, out.length)) >>> 0);
+  }
+  return out.buffer;
+}
+
+/**
+ * Compile and download the font. Returns { filename, familyName, unmerged, kernPairs }.
  */
 function exportFont(glyphMap, options = {}) {
   if (typeof opentype === 'undefined') {
@@ -208,11 +334,31 @@ function exportFont(glyphMap, options = {}) {
     glyphs
   });
 
-  const arrayBuffer = font.toArrayBuffer();
+  let arrayBuffer = font.toArrayBuffer();
+
+  // Kerning: glyph indices follow the order above (.notdef is 0)
+  let kernPairs = 0;
+  if (options.kerning !== false && typeof buildKerningTable === 'function') {
+    try {
+      const index = new Map();
+      Array.from(glyphMap.keys()).forEach((ch, i) => index.set(ch, i + 1));
+      const pairs = buildKerningTable(glyphMap).map((p) => ({
+        first: index.get(p.left),
+        second: index.get(p.right),
+        value: p.value
+      }));
+      if (pairs.length) {
+        arrayBuffer = addTableToFont(arrayBuffer, 'GPOS', buildGposKernTable(pairs));
+        kernPairs = pairs.length;
+      }
+    } catch (err) {
+      console.warn('Kerning could not be written; exporting without it:', err);
+    }
+  }
   const blob = new Blob([arrayBuffer], { type: 'font/otf' });
   const filename = `${familyName.replace(/\s+/g, '')}.otf`;
   triggerDownload(blob, filename);
-  return { filename, familyName, unmerged };
+  return { filename, familyName, unmerged, kernPairs };
 }
 
 function exportSpecimenSVG(svgEl, filename = 'CustomSketchSpecimen.svg') {
