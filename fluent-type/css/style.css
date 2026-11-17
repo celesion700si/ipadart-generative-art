@@ -731,6 +731,38 @@ input[type="range"]::-webkit-slider-thumb:hover {
   .btn-text { padding: 6px 4px; font-size: 12px; }
 }
 
+/* Font name / designer fields */
+.font-identity {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.field input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+}
+.field input:focus { border-color: var(--accent); }
+@media (pointer: coarse) {
+  /* 16px stops iOS Safari from zooming the page when a field is focused */
+  .field input, #specimen-input { font-size: 16px; }
+}
+
 /* --- iPad landscape and small laptops --------------------------------- */
 @media (max-width: 1200px) {
   .brand-tag { display: none; }
@@ -778,6 +810,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
   .sidebar-header { margin-bottom: 8px; }
   .presets-bar { grid-template-columns: repeat(4, 1fr); margin-bottom: 12px; }
+  .font-identity { grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-bottom: 12px; }
   .sliders-list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

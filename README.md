@@ -28,7 +28,7 @@ An evolving collection of interactive generative artworks by **Ying-Pin Lin（�
 
 ### 08 · FLUENT.TYPE — 參數化字型編輯器
 
-在瀏覽器裡運作的英文字型工坊。六個參數即時生成 78 個字符，可手動拖曳貝茲節點微調，並匯出 SVG 樣張與 TTF 字型（使用 opentype.js）。
+在瀏覽器裡運作的英文字型工坊。六個參數即時生成 78 個字符，可手動拖曳貝茲節點微調，並匯出 SVG 樣張與 OTF 字型（opentype.js 與 Paper.js 已內建，不需外部 CDN）。
 
 [Open source](./fluent-type/) · [View artwork](https://lab.ipadart.net/fluent-type/)
 

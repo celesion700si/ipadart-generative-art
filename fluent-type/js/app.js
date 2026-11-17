@@ -246,6 +246,7 @@ function bindGlyphsViewControls() {
 
   window.addEventListener('keydown', (e) => {
     if (state.activeView !== 'glyphs') return;
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (state.editor.selectedNode) {
         e.preventDefault();
@@ -508,10 +509,25 @@ function resetSelectedGlyph() {
 
 // ==================== EXPORT BUTTONS ====================
 function bindExportButtons() {
+  const nameInput = document.getElementById('font-name');
+  const designerInput = document.getElementById('font-designer');
+
   document.getElementById('btn-export-ttf').addEventListener('click', () => {
     try {
-      exportTTF(state.glyphMap, 'CustomSketchFont');
-      showToast('已編譯並下載 CustomSketchFont.ttf');
+      const typed = nameInput ? nameInput.value : '';
+      const result = exportFont(state.glyphMap, {
+        familyName: typed,
+        designer: designerInput ? designerInput.value : ''
+      });
+      if (nameInput) nameInput.value = result.familyName;
+      let msg = `已編譯並下載 ${result.filename}`;
+      if (typed.trim() && sanitizeFamilyName(typed) !== typed.trim()) {
+        msg += '（字型名稱僅保留英數字）';
+      }
+      if (result.unmerged.length) {
+        msg += `｜${result.unmerged.length} 個字符未能合併輪廓`;
+      }
+      showToast(msg);
     } catch (err) {
       showToast(`匯出失敗：${err.message}`);
     }
@@ -519,8 +535,10 @@ function bindExportButtons() {
 
   document.getElementById('btn-export-svg').addEventListener('click', () => {
     const svg = document.getElementById('specimen-svg');
-    exportSpecimenSVG(svg, 'CustomSketchSpecimen.svg');
-    showToast('已匯出向量圖檔 CustomSketchSpecimen.svg');
+    const base = (sanitizeFamilyName(nameInput ? nameInput.value : '') || 'Fluent Sketch').replace(/\s+/g, '');
+    const filename = `${base}-Specimen.svg`;
+    exportSpecimenSVG(svg, filename);
+    showToast(`已匯出向量圖檔 ${filename}`);
   });
 }
 
