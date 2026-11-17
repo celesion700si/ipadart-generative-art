@@ -26,6 +26,12 @@ An evolving collection of interactive generative artworks by **Ying-Pin Lin（�
 
 [Open source](./chromatic-moire-lab/) · [View artwork](https://lab.ipadart.net/chromatic-moire-lab/)
 
+### 08 · FLUENT.TYPE — 參數化字型編輯器
+
+在瀏覽器裡運作的英文字型工坊。六個參數即時生成 78 個字符，可手動拖曳貝茲節點微調，並匯出 SVG 樣張與 TTF 字型（使用 opentype.js）。
+
+[Open source](./fluent-type/) · [View artwork](https://lab.ipadart.net/fluent-type/)
+
 ## Creative lineage
 
 | Nocturne Mesh | 24 Breaths |

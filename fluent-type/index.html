@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FLUENT.TYPE — 即時參數化字體設計與生成工具</title>
+  <meta name="description" content="FLUENT.TYPE 是林英斌的參數化英文字型編輯器：以滑桿即時調整筆畫、融合與字懷，手動微調貝茲節點，並匯出 SVG 樣張與 TTF 字型。" />
+  <meta name="author" content="Ying-Pin Lin" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://lab.ipadart.net/fluent-type/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="iPadART Interactive Lab" />
+  <meta property="og:title" content="FLUENT.TYPE｜參數化字型編輯器" />
+  <meta property="og:description" content="A parametric type foundry in the browser. Shape 78 glyphs with sliders, edit Bézier nodes, export SVG and TTF. By Ying-Pin Lin." />
+  <meta property="og:url" content="https://lab.ipadart.net/fluent-type/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- opentype.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">FLUENT.TYPE</span>
+        <span class="brand-tag">PARAMETRIC SKETCH FOUNDRY</span>
+      </div>
+
+      <nav class="view-switcher" role="tablist" aria-label="工作區視圖切換">
+        <button id="tab-specimen" class="tab-btn active" role="tab" aria-selected="true" data-view="specimen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+          </svg>
+          樣張預覽 Specimen
+        </button>
+        <button id="tab-glyphs" class="tab-btn" role="tab" aria-selected="false" data-view="glyphs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          單字節點編輯 Glyphs
+        </button>
+      </nav>
+
+      <div class="export-actions">
+        <span id="status-badge" class="status-badge">78 Glyphs Ready</span>
+        <button id="btn-export-svg" class="btn btn-secondary" title="匯出目前樣張為向量 SVG">
+          Export .SVG
+        </button>
+        <button id="btn-export-ttf" class="btn btn-primary" title="編譯並下載標準 OpenType/TrueType 字型">
+          Export .TTF
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Body -->
+    <div class="workspace-container">
+      <!-- Left Parametric Control Panel -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>參數化引擎 Parameters</h2>
+          <button id="btn-reset-params" class="btn-text" title="重設所有參數">Reset</button>
+        </div>
+
+        <div class="presets-bar">
+          <button class="preset-chip active" data-preset="sketch">Fluid Sketch</button>
+          <button class="preset-chip" data-preset="blob">Heavy Melt</button>
+          <button class="preset-chip" data-preset="tall">Quirky Tall</button>
+          <button class="preset-chip" data-preset="clean">Minimal Ink</button>
+        </div>
+
+        <div class="sliders-list">
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-strokeWeight">Stroke Weight <span class="zh-sub">筆畫粗細</span></label>
+              <span class="param-value" id="val-strokeWeight">64</span>
+            </div>
+            <input type="range" id="param-strokeWeight" min="22" max="115" step="1" value="64" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-exaggeration">Exaggeration <span class="zh-sub">造型誇張度</span></label>
+              <span class="param-value" id="val-exaggeration">0.48</span>
+            </div>
+            <input type="range" id="param-exaggeration" min="0" max="1" step="0.01" value="0.48" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-jointMelt">Joint Melt <span class="zh-sub">接點融合度</span></label>
+              <span class="param-value" id="val-jointMelt">0.55</span>
+            </div>
+            <input type="range" id="param-jointMelt" min="0" max="1" step="0.01" value="0.55" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-counterPinch">Counter Pinch <span class="zh-sub">字懷緊縮</span></label>
+              <span class="param-value" id="val-counterPinch">0.28</span>
+            </div>
+            <input type="range" id="param-counterPinch" min="0" max="0.85" step="0.01" value="0.28" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-waistHeight">Waist Height <span class="zh-sub">腰線高度</span></label>
+              <span class="param-value" id="val-waistHeight">0.52</span>
+            </div>
+            <input type="range" id="param-waistHeight" min="0.25" max="0.78" step="0.01" value="0.52" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-label-row">
+              <label for="param-baselineBounce">Baseline Bounce <span class="zh-sub">基線跳動</span></label>
+              <span class="param-value" id="val-baselineBounce">0.30</span>
+            </div>
+            <input type="range" id="param-baselineBounce" min="0" max="1" step="0.01" value="0.30" />
+          </div>
+        </div>
+
+        <div class="metrics-info">
+          <div class="metrics-title">Font Metrics (UPM 1000)</div>
+          <div class="metrics-grid">
+            <span>Ascender</span><span>800</span>
+            <span>Cap Height</span><span>720</span>
+            <span>X-Height</span><span>520</span>
+            <span>Baseline</span><span>0</span>
+            <span>Descender</span><span>-200</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Workspace Area -->
+      <main class="main-stage">
+        <!-- VIEW 1: SPECIMEN VIEW -->
+        <section id="view-specimen" class="workspace-view active">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <label for="specimen-font-size">Font Size</label>
+              <input type="range" id="specimen-font-size" min="36" max="200" step="2" value="96" />
+              <span id="val-font-size" class="toolbar-val">96px</span>
+            </div>
+
+            <div class="toolbar-group">
+              <label for="specimen-tracking">Tracking</label>
+              <input type="range" id="specimen-tracking" min="-80" max="200" step="5" value="10" />
+              <span id="val-tracking" class="toolbar-val">+10</span>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <div class="segmented-control" role="group" aria-label="檢視模式">
+              <button id="mode-solid" class="seg-btn active" data-render-mode="solid">實心填色 Solid</button>
+              <button id="mode-outline" class="seg-btn" data-render-mode="outline">純輪廓線 Outline</button>
+            </div>
+
+            <label class="checkbox-pill">
+              <input type="checkbox" id="toggle-specimen-metrics" checked />
+              <span>輔助線 Metrics</span>
+            </label>
+          </div>
+
+          <div class="specimen-editor-bar">
+            <textarea id="specimen-input" rows="2" spellcheck="false" placeholder="Type here...">Type here...
+Organic Sketch 0123!</textarea>
+          </div>
+
+          <div class="specimen-canvas-wrap" id="specimen-canvas-wrap">
+            <svg id="specimen-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </section>
+
+        <!-- VIEW 2: GLYPHS & NODE EDITOR VIEW -->
+        <section id="view-glyphs" class="workspace-view">
+          <div class="glyphs-layout">
+            <!-- Left: Glyph Grid -->
+            <div class="glyph-grid-panel">
+              <div class="glyph-filter-bar">
+                <button class="filter-chip active" data-filter="all">All (78)</button>
+                <button class="filter-chip" data-filter="upper">A-Z</button>
+                <button class="filter-chip" data-filter="lower">a-z</button>
+                <button class="filter-chip" data-filter="num">0-9</button>
+                <button class="filter-chip" data-filter="punct">符號</button>
+              </div>
+              <div id="glyph-grid" class="glyph-grid"></div>
+            </div>
+
+            <!-- Right: Interactive Node Editor -->
+            <div class="node-editor-panel">
+              <div class="editor-toolbar">
+                <div class="editor-char-info">
+                  <span id="editor-char-badge" class="char-badge">A</span>
+                  <div class="char-meta">
+                    <span id="editor-unicode">U+0041</span>
+                    <span id="editor-adv-width">Advance: 660</span>
+                  </div>
+                  <span id="editor-edited-tag" class="edited-tag hidden">已手動微調</span>
+                </div>
+
+                <div class="editor-actions">
+                  <button id="btn-node-delete" class="btn btn-sm btn-danger" disabled title="刪除選取的節點 (Delete / Backspace)">
+                    刪除節點 Delete Node
+                  </button>
+                  <button id="btn-glyph-reset" class="btn btn-sm btn-secondary" title="放棄手動微調，恢復參數化生成">
+                    還原參數生成 Reset Glyph
+                  </button>
+                </div>
+              </div>
+
+              <div class="editor-canvas-wrap" id="editor-canvas-wrap">
+                <svg id="editor-svg" viewBox="-150 -200 1100 1200" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div class="editor-hint">
+                  拖曳藍色方形移動錨點（Anchor）｜拖曳圓形控制柄（Handle）調整貝茲曲線｜點擊節點後按 Delete 刪除
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/glyph-definitions.js"></script>
+  <script src="js/procedural-engine.js"></script>
+  <script src="js/ttf-exporter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
