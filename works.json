@@ -3,52 +3,140 @@
     "name": "iPadART Interactive Lab",
     "url": "https://lab.ipadart.net/",
     "home": "https://www.ipadart.net/",
-    "author": { "name": "Yin-Ping Lin", "alternateName": "林英斌", "url": "https://www.ipadart.net/" }
+    "author": {
+      "name": "Yin-Ping Lin",
+      "alternateName": "林英斌",
+      "url": "https://www.ipadart.net/"
+    }
   },
   "groups": [
-    { "id": "tool", "label": "TOOLS", "label_zh": "創作工具", "lead_en": "Make something of your own.", "lead_zh": "動手，做出自己的東西。" },
-    { "id": "artwork", "label": "ARTWORKS", "label_zh": "互動作品", "lead_en": "Look, touch, linger.", "lead_zh": "觀看、觸碰、停留。" }
+    {
+      "id": "tool",
+      "label": "CREATIVE TOOLS",
+      "label_zh": "創作工具",
+      "lead_en": "Make something of your own.",
+      "lead_zh": "動手，做出自己的東西。"
+    },
+    {
+      "id": "artwork",
+      "label": "INTERACTIVE TOOLS",
+      "label_zh": "互動工具",
+      "lead_en": "Look, touch, linger.",
+      "lead_zh": "觀看、觸碰、停留。"
+    }
   ],
   "works": [
-    { "id": "fluent-type", "type": "tool", "number": "08", "year": 2026, "ipad": true,
-      "title": "FLUENT.TYPE", "title_zh": "流動字型", "kind": "PARAMETRIC TYPE TOOL",
+    {
+      "id": "fluent-type",
+      "type": "tool",
+      "number": "08",
+      "year": 2026,
+      "ipad": true,
+      "title": "FLUENT.TYPE",
+      "title_zh": "流動字型",
+      "kind": "PARAMETRIC TYPE TOOL",
       "desc_en": "Shape 78 glyphs with six sliders, fine-tune the Bézier nodes by hand, then export your own typeface as SVG or OTF.",
       "desc_zh": "用六個參數即時塑造 78 個字符，拖曳貝茲節點親手微調，再把自己的字體匯出成 SVG 與 OTF。",
-      "cta": "OPEN THE FOUNDRY", "lesson": "文字造形與字體設計", "lesson_en": "Lettering and type design", "lesson_url": null },
-    { "id": "chromatic-moire-lab", "type": "tool", "number": "05", "year": 2026, "ipad": true,
-      "title": "Chromatic Moiré Lab", "title_zh": "色彩莫列實驗室", "kind": "OPTICAL COLOR STUDY",
+      "cta": "OPEN THE FOUNDRY",
+      "lesson": "文字造形與字體設計",
+      "lesson_en": "Lettering and type design",
+      "lesson_url": null
+    },
+    {
+      "id": "chromatic-moire-lab",
+      "type": "tool",
+      "number": "05",
+      "year": 2026,
+      "ipad": true,
+      "title": "Chromatic Moiré Lab",
+      "title_zh": "色彩莫列實驗室",
+      "kind": "OPTICAL COLOR STUDY",
       "desc_en": "Drag a transparent grating and watch tiny shifts grow into waves, colour vibration and six-frame animation.",
       "desc_zh": "拖曳透明光柵，讓細小位移被放大成波動、色彩震動與六幀動畫；從黑白錯視，走向色彩與時間錯視。",
-      "cta": "OPEN THE LAB", "lesson": null, "lesson_en": null, "lesson_url": null },
-    { "id": "trace", "type": "artwork", "number": "07", "year": 2026, "ipad": true, "featured": true,
-      "title": "TRACE", "title_zh": "痕跡", "kind": "INTERACTIVE GESTURE STUDY",
+      "cta": "OPEN THE LAB",
+      "lesson": null,
+      "lesson_en": null,
+      "lesson_url": null
+    },
+    {
+      "id": "trace",
+      "type": "artwork",
+      "number": "07",
+      "year": 2026,
+      "ipad": true,
+      "featured": true,
+      "title": "TRACE",
+      "title_zh": "痕跡",
+      "kind": "INTERACTIVE GESTURE STUDY",
       "desc_en": "Tap, drag and hold. Your gestures become geometry and colour, then slowly fade once you let go.",
       "desc_zh": "點擊、拖曳與停留，讓手勢化成幾何與色彩；放開後，痕跡緩緩消散。",
-      "cta": "ENTER TRACE" },
-    { "id": "nocturne-mesh", "type": "artwork", "number": "01", "year": 2026, "ipad": true,
-      "title": "Nocturne Mesh", "title_zh": "夜巡之網", "kind": "FOUNDATIONAL STUDY",
+      "cta": "ENTER TRACE"
+    },
+    {
+      "id": "nocturne-mesh",
+      "type": "artwork",
+      "number": "01",
+      "year": 2026,
+      "ipad": true,
+      "title": "Nocturne Mesh",
+      "title_zh": "夜巡之網",
+      "kind": "FOUNDATIONAL STUDY",
       "desc_en": "Classical chiaroscuro meets a digital point cloud: a net of night that keeps reshaping itself in a Perlin-noise flow field.",
       "desc_zh": "古典明暗對比與數位幾何點雲，在 Perlin Noise 流場中形成一張持續變動的夜之網。",
-      "cta": "ENTER THE FIELD" },
-    { "id": "24-breaths", "type": "artwork", "number": "02", "year": 2026, "ipad": true,
-      "title": "24 Breaths", "title_zh": "二十四個呼吸", "kind": "TAIWAN ADE LIVING CONSTELLATION",
+      "cta": "ENTER THE FIELD"
+    },
+    {
+      "id": "24-breaths",
+      "type": "artwork",
+      "number": "02",
+      "year": 2026,
+      "ipad": true,
+      "title": "24 Breaths",
+      "title_zh": "二十四個呼吸",
+      "kind": "TAIWAN ADE LIVING CONSTELLATION",
       "desc_en": "Twenty-four breaths form an island: a living constellation of Taiwan's Apple Distinguished Educators, resonating with one another.",
       "desc_zh": "二十四個呼吸構成一座島。從《夜巡之網》的生成語法，轉化為臺灣 ADE 社群彼此影響、連結與共振的生命星座。",
-      "cta": "ENTER THE CONSTELLATION" },
-    { "id": "two-lab", "type": "artwork", "number": "03", "year": 2026, "ipad": true,
-      "title": "Elastic Orbit", "title_zh": "失衡軌道", "kind": "TWO.JS STUDY 001",
+      "cta": "ENTER THE CONSTELLATION"
+    },
+    {
+      "id": "two-lab",
+      "type": "artwork",
+      "number": "03",
+      "year": 2026,
+      "ipad": true,
+      "title": "Elastic Orbit",
+      "title_zh": "失衡軌道",
+      "kind": "TWO.JS STUDY 001",
       "desc_en": "Approach, pull and drag until a stable ring drifts off balance. The imbalance is not a fault; it is the force your looking leaves behind.",
       "desc_zh": "靠近、牽引與拖曳，使原本穩定的環形結構產生偏移；失衡不是故障，而是觀看留下的力量。",
-      "cta": "ENTER THE ORBIT" },
-    { "id": "luminous-kaleidoscope", "type": "artwork", "number": "04", "year": 2026, "ipad": true,
-      "title": "Luminous Kaleidoscope", "title_zh": "微光折境", "kind": "INTERACTIVE LIGHT STUDY",
+      "cta": "ENTER THE ORBIT"
+    },
+    {
+      "id": "luminous-kaleidoscope",
+      "type": "artwork",
+      "number": "04",
+      "year": 2026,
+      "ipad": true,
+      "title": "Luminous Kaleidoscope",
+      "title_zh": "微光折境",
+      "kind": "INTERACTIVE LIGHT STUDY",
       "desc_en": "Come close and linger: faint light folds, lags and remembers. After your hand leaves, the space is still slowly recalling.",
       "desc_zh": "觀看者的靠近與停留，使微光被折疊、延遲並留下記憶；手離開後，空間仍在緩慢回想。",
-      "cta": "ENTER THE LIGHT" },
-    { "id": "geometry-in-motion", "type": "artwork", "number": "06", "year": 2026, "ipad": true, "wide": true,
-      "title": "Geometry in Motion", "title_zh": "形在呼吸", "kind": "TWO.JS MOTION STUDY",
+      "cta": "ENTER THE LIGHT"
+    },
+    {
+      "id": "geometry-in-motion",
+      "type": "artwork",
+      "number": "06",
+      "year": 2026,
+      "ipad": true,
+      "wide": true,
+      "title": "Geometry in Motion",
+      "title_zh": "形在呼吸",
+      "kind": "TWO.JS MOTION STUDY",
       "desc_en": "Circles, squares and triangles pull, bounce and return to a shared rhythm. Bring a fingertip or cursor near and they answer.",
       "desc_zh": "圓、方與三角形彼此牽引、彈開、回到流動的節奏。以指尖或游標靠近，讓形狀回應你的存在。",
-      "cta": "ENTER THE MOTION" }
+      "cta": "ENTER THE MOTION"
+    }
   ]
 }
