@@ -12,13 +12,13 @@ An evolving collection of interactive generative artworks by **Yin-Ping Lin（�
 
 古典明暗對比（Chiaroscuro）與數位幾何點雲的交會。380 個粒子在 Perlin Noise 向量場中流動，並回應滑鼠與觸控；按下 **D** 鍵可啟動模擬音訊呼吸。
 
-[Open source](./nocturne-mesh/) · [View artwork](https://celesion700si.github.io/ipadart-generative-art/nocturne-mesh/)
+[Open source](./nocturne-mesh/) · [View artwork](https://lab.ipadart.net/nocturne-mesh/)
 
 ### 02 · 24 Breaths of ADE Taiwan
 
 從《夜巡之網》的生成語法發展而來。24 個呼吸節點排列成臺灣輪廓，透過脈動、波紋、粒子與共振連線，表現臺灣 Apple Distinguished Educators 彼此影響與連結的生命星座。
 
-[Open source](./24-breaths/) · [View artwork](https://celesion700si.github.io/ipadart-generative-art/24-breaths/)
+[Open source](./24-breaths/) · [View artwork](https://lab.ipadart.net/24-breaths/)
 
 ### 05 · Chromatic Moiré Lab — 色彩莫列實驗室
 
@@ -31,6 +31,16 @@ An evolving collection of interactive generative artworks by **Yin-Ping Lin（�
 在瀏覽器裡運作的英文字型工坊。六個參數即時生成 78 個字符，可手動拖曳貝茲節點微調，並匯出 SVG 樣張與 OTF 字型（opentype.js 與 Paper.js 已內建，不需外部 CDN）。
 
 [Open source](./fluent-type/) · [View artwork](https://lab.ipadart.net/fluent-type/)
+
+## How this site is built
+
+`works.json` is the single list of everything shown on the home page. To add, reorder or reclassify a work, edit it and run:
+
+```
+python3 _tools/build.py
+```
+
+The script rebuilds `index.html`, `sitemap.xml`, `robots.txt` and the SEO block in each listed work's page. Share images live in `og/`.
 
 ## Creative lineage
 

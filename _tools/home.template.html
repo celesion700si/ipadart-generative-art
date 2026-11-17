@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iPadART Interactive Lab｜Tools &amp; Artworks by Yin-Ping Lin 林英斌</title>
+<meta name="description" content="iPadART Interactive Lab：林英斌的創作工具與互動作品，可在 Mac、iPad 與 iPhone 直接操作。Creative tools and interactive artworks by Yin-Ping Lin, visual arts educator and Apple Distinguished Educator.">
+<meta name="author" content="Yin-Ping Lin">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://lab.ipadart.net/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:site_name" content="iPadART Interactive Lab">
+<meta property="og:title" content="iPadART Interactive Lab｜Tools &amp; Artworks">
+<meta property="og:description" content="Creative tools and interactive artworks by Yin-Ping Lin. Make a typeface, bend light, leave a trace — on Mac, iPad or iPhone.">
+<meta property="og:url" content="https://lab.ipadart.net/">
+<meta property="og:image" content="https://lab.ipadart.net/og/home.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lab.ipadart.net/og/home.jpg">
+<script type="application/ld+json">{{JSONLD}}</script>
+<style>
+:root{--bg:#0d090b;--paper:#f3eee7;--gold:#d6a74c;--muted:#91878a}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;color:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;background:radial-gradient(circle at 75% 15%,#28101f 0,transparent 32%),var(--bg)}
+main{width:min(1180px,calc(100% - 40px));margin:auto;padding:32px 0 72px}
+nav{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:20px;border-bottom:1px solid #ffffff1c;font-size:12px;letter-spacing:.18em}
+nav a{color:var(--paper);text-decoration:none}.brand{font:600 19px Georgia,serif;letter-spacing:-.03em}.brand i{color:var(--gold)}
+.jump{display:flex;gap:22px}.jump a{color:#ffffffb0}.jump a:hover{color:var(--gold)}
+header{padding:clamp(70px,12vw,150px) 0 70px}header .eyebrow{font-size:10px;letter-spacing:.28em;color:var(--gold);margin:0}
+h1{max-width:800px;margin:20px 0 0;font:400 clamp(48px,8vw,108px)/.9 Georgia,serif;letter-spacing:-.055em}h1 i{color:var(--gold)}
+.intro{max-width:620px;margin:28px 0 0;color:#c9c0c2;font-size:15px;line-height:1.75}.intro .zh{display:block;margin-top:10px;color:var(--muted);line-height:1.9}
+.group{margin-top:26px}.group+.group{margin-top:84px}
+.group-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:16px;margin-bottom:22px;border-bottom:1px solid #ffffff1c}
+.group-head h2{margin:0;font:400 clamp(26px,3.4vw,40px)/1 Georgia,serif;letter-spacing:-.03em}.group-head h2 span{font:500 14px/1 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;letter-spacing:.12em;color:var(--gold);margin-left:10px}
+.group-head p{margin:0;font-size:13px;color:var(--muted);letter-spacing:.02em}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.work{position:relative;display:flex;flex-direction:column;min-height:440px;padding:30px;border:1px solid #ffffff17;border-radius:2px;overflow:hidden;color:var(--paper);text-decoration:none;background:#100b0e;transition:.35s ease}
+.work.wide{grid-column:1/-1;min-height:380px}
+.work:before{content:"";position:absolute;inset:0;opacity:.65;transition:.45s ease}
+.work:hover{transform:translateY(-5px);border-color:#d6a74c66}.work:hover:before{transform:scale(1.06);opacity:.9}
+.work>*{position:relative;z-index:1}
+.number{font:italic 20px Georgia,serif;color:var(--gold)}
+.meta{margin-top:auto;padding-top:150px;font-size:9px;letter-spacing:.2em;color:#ffffff65}
+.work h2{margin:11px 0 10px;font:400 clamp(30px,4vw,52px)/1 Georgia,serif}
+.work h2 .zh{display:inline-block;font:400 15px/1 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;letter-spacing:.08em;color:#ffffff8a;margin-left:6px;vertical-align:middle}
+.work p{max-width:460px;margin:0;color:#cfc6c8;font-size:13.5px;line-height:1.6}.work p.zh{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.7}
+.lesson{display:inline-block;align-self:flex-start;margin-top:14px;padding:5px 10px;border:1px solid #ffffff2b;border-radius:99px;font-size:11px;letter-spacing:.04em;color:#ffffffa8}
+.enter{display:inline-block;margin-top:22px;font-size:10px;letter-spacing:.18em;color:var(--gold)}
+footer{display:flex;justify-content:space-between;gap:16px;margin-top:70px;padding-top:18px;border-top:1px solid #ffffff1c;color:#ffffff45;font-size:9px;letter-spacing:.15em}footer a{color:inherit}
+
+/* One background per work, keyed by its id — order on the page never matters */
+.w-fluent-type{background:#0b0c10;color:#f3f4f6}.w-fluent-type:before{background:radial-gradient(circle at 70% 30%,#d4ff33 0 1.2%,transparent 1.8%),radial-gradient(circle at 46% 22%,#38bdf8 0 1%,transparent 1.6%),radial-gradient(circle at 58% 48%,#f59e0b 0 1%,transparent 1.6%),repeating-linear-gradient(0deg,transparent 0 46px,#d4ff3318 47px 48px),radial-gradient(ellipse at 58% 34%,transparent 0 22%,#d4ff3355 23% 24%,transparent 25%)}.w-fluent-type .number,.w-fluent-type .enter,.w-fluent-type h2 .zh{color:#d4ff33}.w-fluent-type h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:600;letter-spacing:-.05em}
+.w-chromatic-moire-lab:before{background:repeating-linear-gradient(90deg,#071016 0 9px,#10d9d2 10px 13px,#071016 14px 25px,#ff4f87 26px 30px),radial-gradient(ellipse at 68% 34%,#fff 0 3%,#10d9d2 4% 16%,#ff4f87 17% 31%,transparent 32%);background-blend-mode:screen;opacity:.42}.w-chromatic-moire-lab:after{content:"";position:absolute;inset:auto 0 0 0;height:62%;background:linear-gradient(transparent,#0a0d12 58%)}
+.w-trace{background:#10131c;color:#f6f2eb}.w-trace:before{background:radial-gradient(circle at 65% 42%,transparent 0 64px,#a4d8cd85 65px 67px,transparent 68px),repeating-conic-gradient(from 18deg at 65% 42%,transparent 0 42deg,#f2766277 43deg 47deg,transparent 48deg 90deg),radial-gradient(circle at 65% 42%,#b2a9e866 0 10%,transparent 38%);opacity:.7}.w-trace .number,.w-trace .enter{color:#f9bd75}.w-trace h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:500;letter-spacing:-.08em}
+.w-nocturne-mesh:before{background:radial-gradient(circle at 65% 36%,#d6b068 0 1%,transparent 2%),radial-gradient(circle at 52% 28%,#60409e 0 1%,transparent 2%),repeating-radial-gradient(circle at 58% 32%,transparent 0 20px,#ffffff0d 21px 22px)}
+.w-24-breaths:before{background:radial-gradient(circle at 50% 14%,#f3a618 0 2%,transparent 3%),radial-gradient(circle at 48% 30%,#ee5569 0 3%,transparent 4%),radial-gradient(circle at 52% 48%,#c500bc 0 4%,transparent 5%)}
+.w-two-lab:before{background:radial-gradient(ellipse at 56% 34%,transparent 0 15%,#45bfdb55 16% 17%,transparent 18% 26%,#6dd9f24d 27% 28%,transparent 29% 38%,#8f96d94d 39% 40%,transparent 41%)}
+.w-luminous-kaleidoscope:before{background:repeating-conic-gradient(from 12deg at 50% 36%,#ffc56b22 0 8deg,#d85cff44 9deg 16deg,#4d74ff33 17deg 25deg,transparent 26deg 34deg),radial-gradient(circle at 50% 36%,#fff4c9 0 2%,#ff78d955 3% 12%,#27205a 34%,#080911 72%)}.w-luminous-kaleidoscope:after{content:"";position:absolute;inset:auto 0 0 0;height:58%;background:linear-gradient(transparent,#0b0a14 62%)}
+.w-geometry-in-motion{background:#efede3;color:#243b37}.w-geometry-in-motion:before{background:radial-gradient(circle at 22% 30%,transparent 0 28px,#315d53 29px 31px,transparent 32px),radial-gradient(circle at 73% 38%,#d99074 0 40px,transparent 41px),conic-gradient(from 24deg at 86% 52%,transparent 0 30deg,#9caf90 31deg 60deg,transparent 61deg 360deg),linear-gradient(135deg,#f7f3e8,#e7e7d9);opacity:.8}.w-geometry-in-motion .number,.w-geometry-in-motion .enter{color:#a45242}.w-geometry-in-motion .meta,.w-geometry-in-motion h2 .zh{color:#34534d}.w-geometry-in-motion p{color:#2f4a45}.w-geometry-in-motion p.zh{color:#4d655f}
+
+@media(max-width:760px){main{width:min(100% - 28px,1180px)}nav{letter-spacing:.12em}.jump{gap:14px}.grid{grid-template-columns:1fr}.work{min-height:400px}.meta{padding-top:130px}.group-head{display:block}.group-head p{margin-top:10px}footer{display:block;line-height:2}}
+</style>
+</head>
+<body>
+<main>
+<nav><a class="brand" href="https://www.ipadart.net/" aria-label="iPadART home">iPad<i>ART</i></a><span class="jump"><a href="#tools">TOOLS</a><a href="#artworks">ARTWORKS</a></span><a href="https://www.ipadart.net/">ipadart.net ↗</a></nav>
+<header><p class="eyebrow">YIN-PING LIN · INTERACTIVE LAB</p><h1>Where pixels learn to <i>breathe.</i></h1><div class="intro"><span lang="en">From chiaroscuro in painting to flow fields in code. This lab keeps the tools I build for the classroom and the artworks I make for myself — and how each one came to be.</span><span class="zh" lang="zh-Hant">從繪畫的明暗，到演算法的流場。這裡收著我為課堂做的創作工具、為自己做的互動作品，也保存每一次創作如何發生。</span></div></header>
+{{SECTIONS}}
+<footer><span>© 2026 YIN-PING LIN · <a href="https://www.ipadart.net/">IPADART.NET</a></span><span>VISUAL ARTS · APPLE TECHNOLOGY · ARTFUL LEARNING</span></footer>
+</main>
+</body>
+</html>

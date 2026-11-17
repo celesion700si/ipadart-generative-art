@@ -3,56 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="iPadART Interactive Lab：林英斌以光、觀看、時間與流動為核心，創作可於 Mac、iPad 與 iPhone 體驗的生成藝術作品。">
+<title>iPadART Interactive Lab｜Tools &amp; Artworks by Yin-Ping Lin 林英斌</title>
+<meta name="description" content="iPadART Interactive Lab：林英斌的創作工具與互動作品，可在 Mac、iPad 與 iPhone 直接操作。Creative tools and interactive artworks by Yin-Ping Lin, visual arts educator and Apple Distinguished Educator.">
 <meta name="author" content="Yin-Ping Lin">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://lab.ipadart.net/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
 <meta property="og:site_name" content="iPadART Interactive Lab">
-<meta property="og:title" content="iPadART Interactive Lab｜互動作品">
-<meta property="og:description" content="以光、觀看、時間與流動為核心的生成藝術實驗室。探索粒子、色彩、莫列干涉與互動觀看。">
+<meta property="og:title" content="iPadART Interactive Lab｜Tools &amp; Artworks">
+<meta property="og:description" content="Creative tools and interactive artworks by Yin-Ping Lin. Make a typeface, bend light, leave a trace — on Mac, iPad or iPhone.">
 <meta property="og:url" content="https://lab.ipadart.net/">
-<meta name="twitter:card" content="summary">
-<title>iPadART Interactive Lab｜林英斌互動作品</title>
+<meta property="og:image" content="https://lab.ipadart.net/og/home.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lab.ipadart.net/og/home.jpg">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://lab.ipadart.net/#website", "name": "iPadART Interactive Lab", "url": "https://lab.ipadart.net/", "inLanguage": ["en", "zh-Hant"], "publisher": {"@type": "Person", "@id": "https://www.ipadart.net/#person", "name": "Yin-Ping Lin", "alternateName": "林英斌", "url": "https://www.ipadart.net/"}}, {"@type": "CollectionPage", "@id": "https://lab.ipadart.net/#collection", "name": "iPadART Interactive Lab", "url": "https://lab.ipadart.net/", "isPartOf": {"@id": "https://lab.ipadart.net/#website"}, "about": {"@type": "Person", "@id": "https://www.ipadart.net/#person", "name": "Yin-Ping Lin", "alternateName": "林英斌", "url": "https://www.ipadart.net/"}, "mainEntity": {"@type": "ItemList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "FLUENT.TYPE", "url": "https://lab.ipadart.net/fluent-type/"}, {"@type": "ListItem", "position": 2, "name": "Chromatic Moiré Lab", "url": "https://lab.ipadart.net/chromatic-moire-lab/"}, {"@type": "ListItem", "position": 3, "name": "TRACE", "url": "https://lab.ipadart.net/trace/"}, {"@type": "ListItem", "position": 4, "name": "Nocturne Mesh", "url": "https://lab.ipadart.net/nocturne-mesh/"}, {"@type": "ListItem", "position": 5, "name": "24 Breaths", "url": "https://lab.ipadart.net/24-breaths/"}, {"@type": "ListItem", "position": 6, "name": "Elastic Orbit", "url": "https://lab.ipadart.net/two-lab/"}, {"@type": "ListItem", "position": 7, "name": "Luminous Kaleidoscope", "url": "https://lab.ipadart.net/luminous-kaleidoscope/"}, {"@type": "ListItem", "position": 8, "name": "Geometry in Motion", "url": "https://lab.ipadart.net/geometry-in-motion/"}]}}]}</script>
 <style>
 :root{--bg:#0d090b;--paper:#f3eee7;--gold:#d6a74c;--muted:#91878a}
 *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;color:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;background:radial-gradient(circle at 75% 15%,#28101f 0,transparent 32%),var(--bg)}
 main{width:min(1180px,calc(100% - 40px));margin:auto;padding:32px 0 72px}
-nav{display:flex;justify-content:space-between;align-items:center;padding-bottom:20px;border-bottom:1px solid #ffffff1c;font-size:12px;letter-spacing:.18em}
+nav{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-bottom:20px;border-bottom:1px solid #ffffff1c;font-size:12px;letter-spacing:.18em}
 nav a{color:var(--paper);text-decoration:none}.brand{font:600 19px Georgia,serif;letter-spacing:-.03em}.brand i{color:var(--gold)}
-header{padding:clamp(70px,12vw,150px) 0 70px}header p{font-size:10px;letter-spacing:.28em;color:var(--gold)}
+.jump{display:flex;gap:22px}.jump a{color:#ffffffb0}.jump a:hover{color:var(--gold)}
+header{padding:clamp(70px,12vw,150px) 0 70px}header .eyebrow{font-size:10px;letter-spacing:.28em;color:var(--gold);margin:0}
 h1{max-width:800px;margin:20px 0 0;font:400 clamp(48px,8vw,108px)/.9 Georgia,serif;letter-spacing:-.055em}h1 i{color:var(--gold)}
-.intro{max-width:600px;margin:28px 0 0;color:var(--muted);font-size:15px;line-height:1.9}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}.work{position:relative;min-height:430px;padding:30px;border:1px solid #ffffff17;border-radius:2px;overflow:hidden;color:var(--paper);text-decoration:none;background:#100b0e;transition:.35s ease}
-.work:before{content:"";position:absolute;inset:0;opacity:.65;transition:.45s ease}.work:first-child:before{background:radial-gradient(circle at 65% 45%,#d6b068 0 1%,transparent 2%),radial-gradient(circle at 52% 38%,#60409e 0 1%,transparent 2%),repeating-radial-gradient(circle at 58% 42%,transparent 0 20px,#ffffff0d 21px 22px)}
-.work:nth-child(2):before{background:radial-gradient(circle at 50% 20%,#f3a618 0 2%,transparent 3%),radial-gradient(circle at 48% 42%,#ee5569 0 3%,transparent 4%),radial-gradient(circle at 52% 70%,#c500bc 0 4%,transparent 5%)}
-.work:nth-child(3):before{background:radial-gradient(ellipse at 48% 48%,transparent 0 15%,#45bfdb24 16% 17%,transparent 18% 26%,#6dd9f22e 27% 28%,transparent 29% 38%,#252a4d55 39% 40%,transparent 41%),linear-gradient(135deg,#f9f9f9 0 48%,#dff6fb 100%)}
-.work:nth-child(4):before{background:repeating-conic-gradient(from 12deg at 50% 48%,#ffc56b22 0 8deg,#d85cff44 9deg 16deg,#4d74ff33 17deg 25deg,transparent 26deg 34deg),radial-gradient(circle at 50% 48%,#fff4c9 0 2%,#ff78d955 3% 12%,#27205a 34%,#080911 72%)}
-.work:nth-child(5){grid-column:1/-1;min-height:390px}.work:nth-child(5):before{background:repeating-linear-gradient(90deg,#071016 0 9px,#10d9d2 10px 13px,#071016 14px 25px,#ff4f87 26px 30px),radial-gradient(ellipse at 68% 46%,#fff 0 3%,#10d9d2 4% 16%,#ff4f87 17% 31%,transparent 32%);background-blend-mode:screen;opacity:.48}
-.work:nth-child(6){grid-column:1/-1;min-height:390px;background:#efede3;color:#243b37}.work:nth-child(6):before{background:radial-gradient(circle at 22% 30%,transparent 0 28px,#315d53 29px 31px,transparent 32px),radial-gradient(circle at 73% 42%,#d99074 0 40px,transparent 41px),conic-gradient(from 24deg at 52% 62%,transparent 0 30deg,#9caf90 31deg 60deg,transparent 61deg 360deg),linear-gradient(135deg,#f7f3e8,#e7e7d9);opacity:.8}.work:nth-child(6) .number,.work:nth-child(6) .enter{color:#a45242}.work:nth-child(6) .meta,.work:nth-child(6) p{color:#34534d}.work:hover{transform:translateY(-5px);border-color:#d6a74c66}.work:hover:before{transform:scale(1.06);opacity:.9}
-.number,.meta,.work h2,.work p,.enter{position:relative;z-index:1}.number{font:italic 20px Georgia,serif;color:var(--gold)}.meta{margin-top:210px;font-size:9px;letter-spacing:.2em;color:#ffffff65}.work h2{margin:11px 0 8px;font:400 clamp(30px,4vw,52px)/1 Georgia,serif}.work p{max-width:440px;margin:0;color:var(--muted);font-size:13px;line-height:1.7}.enter{display:inline-block;margin-top:22px;font-size:10px;letter-spacing:.18em;color:var(--gold)}
-footer{display:flex;justify-content:space-between;margin-top:70px;padding-top:18px;border-top:1px solid #ffffff1c;color:#ffffff45;font-size:9px;letter-spacing:.15em}
-@media(max-width:760px){main{width:min(100% - 28px,1180px)}nav span{display:none}.grid{grid-template-columns:1fr}.work{min-height:390px}.work .meta{margin-top:180px}footer{display:block;line-height:2}}
-.work.trace{grid-column:1/-1;order:-1;min-height:350px;background:#10131c;color:#f6f2eb}.work.trace:before{background:radial-gradient(circle at 65% 45%,transparent 0 64px,#a4d8cd85 65px 67px,transparent 68px),repeating-conic-gradient(from 18deg at 65% 45%,transparent 0 42deg,#f2766277 43deg 47deg,transparent 48deg 90deg),radial-gradient(circle at 65% 45%,#b2a9e866 0 10%,transparent 38%);opacity:.7}.work.trace .meta{margin-top:145px}.work.trace .number,.work.trace .enter{color:#f9bd75}.work.trace h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:500;letter-spacing:-.08em}.work.trace p{color:#c1c2ca}
-.work.fluent{background:#0b0c10;color:#f3f4f6}.work.fluent:before{background:radial-gradient(circle at 70% 34%,#d4ff33 0 1.2%,transparent 1.8%),radial-gradient(circle at 46% 26%,#38bdf8 0 1%,transparent 1.6%),radial-gradient(circle at 58% 56%,#f59e0b 0 1%,transparent 1.6%),repeating-linear-gradient(0deg,transparent 0 46px,#d4ff3318 47px 48px),radial-gradient(ellipse at 58% 38%,transparent 0 22%,#d4ff3355 23% 24%,transparent 25%)}.work.fluent .number,.work.fluent .enter{color:#d4ff33}.work.fluent h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:600;letter-spacing:-.05em}.work.fluent p{color:#9ca3af}
+.intro{max-width:620px;margin:28px 0 0;color:#c9c0c2;font-size:15px;line-height:1.75}.intro .zh{display:block;margin-top:10px;color:var(--muted);line-height:1.9}
+.group{margin-top:26px}.group+.group{margin-top:84px}
+.group-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:16px;margin-bottom:22px;border-bottom:1px solid #ffffff1c}
+.group-head h2{margin:0;font:400 clamp(26px,3.4vw,40px)/1 Georgia,serif;letter-spacing:-.03em}.group-head h2 span{font:500 14px/1 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;letter-spacing:.12em;color:var(--gold);margin-left:10px}
+.group-head p{margin:0;font-size:13px;color:var(--muted);letter-spacing:.02em}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+.work{position:relative;display:flex;flex-direction:column;min-height:440px;padding:30px;border:1px solid #ffffff17;border-radius:2px;overflow:hidden;color:var(--paper);text-decoration:none;background:#100b0e;transition:.35s ease}
+.work.wide{grid-column:1/-1;min-height:380px}
+.work:before{content:"";position:absolute;inset:0;opacity:.65;transition:.45s ease}
+.work:hover{transform:translateY(-5px);border-color:#d6a74c66}.work:hover:before{transform:scale(1.06);opacity:.9}
+.work>*{position:relative;z-index:1}
+.number{font:italic 20px Georgia,serif;color:var(--gold)}
+.meta{margin-top:auto;padding-top:150px;font-size:9px;letter-spacing:.2em;color:#ffffff65}
+.work h2{margin:11px 0 10px;font:400 clamp(30px,4vw,52px)/1 Georgia,serif}
+.work h2 .zh{display:inline-block;font:400 15px/1 -apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;letter-spacing:.08em;color:#ffffff8a;margin-left:6px;vertical-align:middle}
+.work p{max-width:460px;margin:0;color:#cfc6c8;font-size:13.5px;line-height:1.6}.work p.zh{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.7}
+.lesson{display:inline-block;align-self:flex-start;margin-top:14px;padding:5px 10px;border:1px solid #ffffff2b;border-radius:99px;font-size:11px;letter-spacing:.04em;color:#ffffffa8}
+.enter{display:inline-block;margin-top:22px;font-size:10px;letter-spacing:.18em;color:var(--gold)}
+footer{display:flex;justify-content:space-between;gap:16px;margin-top:70px;padding-top:18px;border-top:1px solid #ffffff1c;color:#ffffff45;font-size:9px;letter-spacing:.15em}footer a{color:inherit}
+
+/* One background per work, keyed by its id — order on the page never matters */
+.w-fluent-type{background:#0b0c10;color:#f3f4f6}.w-fluent-type:before{background:radial-gradient(circle at 70% 30%,#d4ff33 0 1.2%,transparent 1.8%),radial-gradient(circle at 46% 22%,#38bdf8 0 1%,transparent 1.6%),radial-gradient(circle at 58% 48%,#f59e0b 0 1%,transparent 1.6%),repeating-linear-gradient(0deg,transparent 0 46px,#d4ff3318 47px 48px),radial-gradient(ellipse at 58% 34%,transparent 0 22%,#d4ff3355 23% 24%,transparent 25%)}.w-fluent-type .number,.w-fluent-type .enter,.w-fluent-type h2 .zh{color:#d4ff33}.w-fluent-type h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:600;letter-spacing:-.05em}
+.w-chromatic-moire-lab:before{background:repeating-linear-gradient(90deg,#071016 0 9px,#10d9d2 10px 13px,#071016 14px 25px,#ff4f87 26px 30px),radial-gradient(ellipse at 68% 34%,#fff 0 3%,#10d9d2 4% 16%,#ff4f87 17% 31%,transparent 32%);background-blend-mode:screen;opacity:.42}.w-chromatic-moire-lab:after{content:"";position:absolute;inset:auto 0 0 0;height:62%;background:linear-gradient(transparent,#0a0d12 58%)}
+.w-trace{background:#10131c;color:#f6f2eb}.w-trace:before{background:radial-gradient(circle at 65% 42%,transparent 0 64px,#a4d8cd85 65px 67px,transparent 68px),repeating-conic-gradient(from 18deg at 65% 42%,transparent 0 42deg,#f2766277 43deg 47deg,transparent 48deg 90deg),radial-gradient(circle at 65% 42%,#b2a9e866 0 10%,transparent 38%);opacity:.7}.w-trace .number,.w-trace .enter{color:#f9bd75}.w-trace h2{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;font-weight:500;letter-spacing:-.08em}
+.w-nocturne-mesh:before{background:radial-gradient(circle at 65% 36%,#d6b068 0 1%,transparent 2%),radial-gradient(circle at 52% 28%,#60409e 0 1%,transparent 2%),repeating-radial-gradient(circle at 58% 32%,transparent 0 20px,#ffffff0d 21px 22px)}
+.w-24-breaths:before{background:radial-gradient(circle at 50% 14%,#f3a618 0 2%,transparent 3%),radial-gradient(circle at 48% 30%,#ee5569 0 3%,transparent 4%),radial-gradient(circle at 52% 48%,#c500bc 0 4%,transparent 5%)}
+.w-two-lab:before{background:radial-gradient(ellipse at 56% 34%,transparent 0 15%,#45bfdb55 16% 17%,transparent 18% 26%,#6dd9f24d 27% 28%,transparent 29% 38%,#8f96d94d 39% 40%,transparent 41%)}
+.w-luminous-kaleidoscope:before{background:repeating-conic-gradient(from 12deg at 50% 36%,#ffc56b22 0 8deg,#d85cff44 9deg 16deg,#4d74ff33 17deg 25deg,transparent 26deg 34deg),radial-gradient(circle at 50% 36%,#fff4c9 0 2%,#ff78d955 3% 12%,#27205a 34%,#080911 72%)}.w-luminous-kaleidoscope:after{content:"";position:absolute;inset:auto 0 0 0;height:58%;background:linear-gradient(transparent,#0b0a14 62%)}
+.w-geometry-in-motion{background:#efede3;color:#243b37}.w-geometry-in-motion:before{background:radial-gradient(circle at 22% 30%,transparent 0 28px,#315d53 29px 31px,transparent 32px),radial-gradient(circle at 73% 38%,#d99074 0 40px,transparent 41px),conic-gradient(from 24deg at 86% 52%,transparent 0 30deg,#9caf90 31deg 60deg,transparent 61deg 360deg),linear-gradient(135deg,#f7f3e8,#e7e7d9);opacity:.8}.w-geometry-in-motion .number,.w-geometry-in-motion .enter{color:#a45242}.w-geometry-in-motion .meta,.w-geometry-in-motion h2 .zh{color:#34534d}.w-geometry-in-motion p{color:#2f4a45}.w-geometry-in-motion p.zh{color:#4d655f}
+
+@media(max-width:760px){main{width:min(100% - 28px,1180px)}nav{letter-spacing:.12em}.jump{gap:14px}.grid{grid-template-columns:1fr}.work{min-height:400px}.meta{padding-top:130px}.group-head{display:block}.group-head p{margin-top:10px}footer{display:block;line-height:2}}
 </style>
 </head>
 <body>
 <main>
-<nav><a class="brand" href="https://www.ipadart.net/">iPad<i>ART</i></a><span>GENERATIVE ART STUDIO</span><a href="https://www.ipadart.net/">回到主站 ↗</a></nav>
-<header><p>YIN-PING LIN · INTERACTIVE ARTWORKS</p><h1>Where pixels learn to <i>breathe.</i></h1><div class="intro">從繪畫的明暗，到演算法的流場；從自由粒子，到一座由教育者共同呼吸的島。這裡保存生成藝術作品，也保存每一次創作如何發生。</div></header>
-<section class="grid">
-<a class="work trace" href="./trace/"><span class="number">07 · FEATURED</span><div class="meta">INTERACTIVE GESTURE STUDY · 2026</div><h2>TRACE</h2><p>《痕跡》——點擊、拖曳與停留，讓手勢化成幾何與色彩；放開後，痕跡緩緩消散。</p><span class="enter">ENTER TRACE →</span></a>
-<a class="work" href="./nocturne-mesh/"><span class="number">01</span><div class="meta">FOUNDATIONAL STUDY · 2026</div><h2>Nocturne Mesh</h2><p>《夜巡之網》——古典明暗對比與數位幾何點雲，在 Perlin Noise 流場中形成一張持續變動的夜之網。</p><span class="enter">ENTER THE FIELD →</span></a>
-<a class="work" href="./24-breaths/"><span class="number">02</span><div class="meta">TAIWAN ADE LIVING CONSTELLATION · 2026</div><h2>24 Breaths</h2><p>二十四個呼吸構成一座島。從《夜巡之網》的生成語法，轉化為臺灣 ADE 社群彼此影響、連結與共振的生命星座。</p><span class="enter">ENTER THE CONSTELLATION →</span></a>
-<a class="work" href="./two-lab/"><span class="number">03</span><div class="meta">TWO.JS STUDY 001 · 2026</div><h2>Elastic Orbit</h2><p>《失衡軌道》——靠近、牽引與拖曳，使原本穩定的環形結構產生偏移；失衡不是故障，而是觀看留下的力量。</p><span class="enter">ENTER THE ORBIT →</span></a>
-<a class="work" href="./luminous-kaleidoscope/"><span class="number">04</span><div class="meta">INTERACTIVE LIGHT STUDY · 2026</div><h2>Luminous Kaleidoscope</h2><p>《微光折境》——觀看者的靠近與停留，使微光被折疊、延遲並留下記憶；手離開後，空間仍在緩慢回想。</p><span class="enter">ENTER THE LIGHT →</span></a>
-<a class="work" href="./chromatic-moire-lab/"><span class="number">05</span><div class="meta">OPTICAL COLOR STUDY · 2026</div><h2>Chromatic Moiré Lab</h2><p>《色彩莫列實驗室》——拖曳透明光柵，讓細小位移被放大成波動、色彩震動與六幀動畫；從黑白錯視，走向色彩與時間錯視。</p><span class="enter">ENTER THE COLOR FIELD →</span></a>
-<a class="work" href="./geometry-in-motion/"><span class="number">06</span><div class="meta">TWO.JS MOTION STUDY · 2026</div><h2>Geometry in Motion</h2><p>《形在呼吸》——圓、方與三角形彼此牽引、彈開、回到流動的節奏。以指尖或游標靠近，讓形狀回應你的存在。</p><span class="enter">ENTER THE MOTION →</span></a>
-<a class="work fluent" href="./fluent-type/"><span class="number">08</span><div class="meta">PARAMETRIC TYPE TOOL · 2026</div><h2>FLUENT.TYPE</h2><p>《流動字型》——用六個參數即時塑造 78 個字符，拖曳貝茲節點親手微調，再把自己的字體匯出成 SVG 與 OTF。</p><span class="enter">ENTER THE FOUNDRY →</span></a>
+<nav><a class="brand" href="https://www.ipadart.net/" aria-label="iPadART home">iPad<i>ART</i></a><span class="jump"><a href="#tools">TOOLS</a><a href="#artworks">ARTWORKS</a></span><a href="https://www.ipadart.net/">ipadart.net ↗</a></nav>
+<header><p class="eyebrow">YIN-PING LIN · INTERACTIVE LAB</p><h1>Where pixels learn to <i>breathe.</i></h1><div class="intro"><span lang="en">From chiaroscuro in painting to flow fields in code. This lab keeps the tools I build for the classroom and the artworks I make for myself — and how each one came to be.</span><span class="zh" lang="zh-Hant">從繪畫的明暗，到演算法的流場。這裡收著我為課堂做的創作工具、為自己做的互動作品，也保存每一次創作如何發生。</span></div></header>
+<section class="group" id="tools" aria-labelledby="h-tool">
+<div class="group-head"><h2 id="h-tool">TOOLS <span lang="zh-Hant">創作工具</span></h2><p><span lang="en">Make something of your own.</span> <span lang="zh-Hant">動手，做出自己的東西。</span></p></div>
+<div class="grid">
+<a class="work w-fluent-type" href="./fluent-type/"><span class="number">08</span><div class="meta">PARAMETRIC TYPE TOOL · 2026</div><h2>FLUENT.TYPE <span class="zh" lang="zh-Hant">流動字型</span></h2><p lang="en">Shape 78 glyphs with six sliders, fine-tune the Bézier nodes by hand, then export your own typeface as SVG or OTF.</p><p class="zh" lang="zh-Hant">用六個參數即時塑造 78 個字符，拖曳貝茲節點親手微調，再把自己的字體匯出成 SVG 與 OTF。</p><span class="lesson">Used in · 用在：Lettering and type design｜文字造形與字體設計</span><span class="enter">OPEN THE FOUNDRY →</span></a>
+<a class="work w-chromatic-moire-lab" href="./chromatic-moire-lab/"><span class="number">05</span><div class="meta">OPTICAL COLOR STUDY · 2026</div><h2>Chromatic Moiré Lab <span class="zh" lang="zh-Hant">色彩莫列實驗室</span></h2><p lang="en">Drag a transparent grating and watch tiny shifts grow into waves, colour vibration and six-frame animation.</p><p class="zh" lang="zh-Hant">拖曳透明光柵，讓細小位移被放大成波動、色彩震動與六幀動畫；從黑白錯視，走向色彩與時間錯視。</p><span class="enter">OPEN THE LAB →</span></a>
+</div>
 </section>
-<footer><span>© 2026 YIN-PING LIN</span><span>VISUAL ARTS · APPLE TECHNOLOGY · ARTFUL LEARNING</span></footer>
+<section class="group" id="artworks" aria-labelledby="h-artwork">
+<div class="group-head"><h2 id="h-artwork">ARTWORKS <span lang="zh-Hant">互動作品</span></h2><p><span lang="en">Look, touch, linger.</span> <span lang="zh-Hant">觀看、觸碰、停留。</span></p></div>
+<div class="grid">
+<a class="work w-trace wide" href="./trace/"><span class="number">07 · FEATURED</span><div class="meta">INTERACTIVE GESTURE STUDY · 2026</div><h2>TRACE <span class="zh" lang="zh-Hant">痕跡</span></h2><p lang="en">Tap, drag and hold. Your gestures become geometry and colour, then slowly fade once you let go.</p><p class="zh" lang="zh-Hant">點擊、拖曳與停留，讓手勢化成幾何與色彩；放開後，痕跡緩緩消散。</p><span class="enter">ENTER TRACE →</span></a>
+<a class="work w-nocturne-mesh" href="./nocturne-mesh/"><span class="number">01</span><div class="meta">FOUNDATIONAL STUDY · 2026</div><h2>Nocturne Mesh <span class="zh" lang="zh-Hant">夜巡之網</span></h2><p lang="en">Classical chiaroscuro meets a digital point cloud: a net of night that keeps reshaping itself in a Perlin-noise flow field.</p><p class="zh" lang="zh-Hant">古典明暗對比與數位幾何點雲，在 Perlin Noise 流場中形成一張持續變動的夜之網。</p><span class="enter">ENTER THE FIELD →</span></a>
+<a class="work w-24-breaths" href="./24-breaths/"><span class="number">02</span><div class="meta">TAIWAN ADE LIVING CONSTELLATION · 2026</div><h2>24 Breaths <span class="zh" lang="zh-Hant">二十四個呼吸</span></h2><p lang="en">Twenty-four breaths form an island: a living constellation of Taiwan&#x27;s Apple Distinguished Educators, resonating with one another.</p><p class="zh" lang="zh-Hant">二十四個呼吸構成一座島。從《夜巡之網》的生成語法，轉化為臺灣 ADE 社群彼此影響、連結與共振的生命星座。</p><span class="enter">ENTER THE CONSTELLATION →</span></a>
+<a class="work w-two-lab" href="./two-lab/"><span class="number">03</span><div class="meta">TWO.JS STUDY 001 · 2026</div><h2>Elastic Orbit <span class="zh" lang="zh-Hant">失衡軌道</span></h2><p lang="en">Approach, pull and drag until a stable ring drifts off balance. The imbalance is not a fault; it is the force your looking leaves behind.</p><p class="zh" lang="zh-Hant">靠近、牽引與拖曳，使原本穩定的環形結構產生偏移；失衡不是故障，而是觀看留下的力量。</p><span class="enter">ENTER THE ORBIT →</span></a>
+<a class="work w-luminous-kaleidoscope" href="./luminous-kaleidoscope/"><span class="number">04</span><div class="meta">INTERACTIVE LIGHT STUDY · 2026</div><h2>Luminous Kaleidoscope <span class="zh" lang="zh-Hant">微光折境</span></h2><p lang="en">Come close and linger: faint light folds, lags and remembers. After your hand leaves, the space is still slowly recalling.</p><p class="zh" lang="zh-Hant">觀看者的靠近與停留，使微光被折疊、延遲並留下記憶；手離開後，空間仍在緩慢回想。</p><span class="enter">ENTER THE LIGHT →</span></a>
+<a class="work w-geometry-in-motion wide" href="./geometry-in-motion/"><span class="number">06</span><div class="meta">TWO.JS MOTION STUDY · 2026</div><h2>Geometry in Motion <span class="zh" lang="zh-Hant">形在呼吸</span></h2><p lang="en">Circles, squares and triangles pull, bounce and return to a shared rhythm. Bring a fingertip or cursor near and they answer.</p><p class="zh" lang="zh-Hant">圓、方與三角形彼此牽引、彈開、回到流動的節奏。以指尖或游標靠近，讓形狀回應你的存在。</p><span class="enter">ENTER THE MOTION →</span></a>
+</div>
+</section>
+<footer><span>© 2026 YIN-PING LIN · <a href="https://www.ipadart.net/">IPADART.NET</a></span><span>VISUAL ARTS · APPLE TECHNOLOGY · ARTFUL LEARNING</span></footer>
 </main>
 </body>
 </html>
